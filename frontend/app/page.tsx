@@ -44,7 +44,7 @@ export default function LandingPage() {
     <header className="sticky top-0 z-40 border-b border-border-subtle bg-bg/80 backdrop-blur-xl"><div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6"><Link href="/" className="flex items-center gap-2.5"><Image src="/logo.png" alt="FactorX" width={36} height={32} className="h-8 w-auto object-contain" priority /><span className="text-[15px] font-semibold tracking-tight">FactorX</span></Link><div className="flex items-center gap-3"><ThemeToggle /><Link href="/dashboard" className="btn-primary btn-small">Open App</Link></div></div></header>
 
     <main>
-      <section className="hero relative overflow-hidden"><div className="hero-glow hero-glow-one"/><div className="hero-glow hero-glow-two"/><div className="relative mx-auto grid max-w-6xl items-center gap-14 px-6 py-24 md:grid-cols-[1.05fr_.95fr] md:py-32"><div className="animate-fade-up"><div className="protocol-pill"><span className="status-dot"/> Attestcoin Protocol <span className="opacity-50">·</span> Creditcoin</div><h1 className="hero-title mt-6">Verified commercial payments become <span>portable financial reputation.</span></h1><p className="hero-copy">FactorX turns verified commercial payments into a living Commercial Cashflow Passport on Creditcoin. Other protocols can read it. Better terms can follow.</p><div className="mt-8 flex flex-wrap gap-3"><Link href="/dashboard" className="btn-primary">Launch Passport</Link><a href="https://github.com/Ebubechukwucyber/FactorX" target="_blank" rel="noreferrer" className="btn-secondary">View code <span aria-hidden>→</span></a></div><div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-xs text-muted"><span>Verified payments</span><span>Living score</span><span>Portable identity</span></div></div><PassportPreview /></div></section>
+      <section className="hero relative overflow-hidden"><div className="hero-glow hero-glow-one"/><div className="hero-glow hero-glow-two"/><div className="relative mx-auto grid max-w-6xl items-center gap-14 px-6 py-24 md:grid-cols-[1.05fr_.95fr] md:py-32"><div className="animate-fade-up"><div className="protocol-pill"><span className="status-dot"/> Attestcoin Protocol <span className="opacity-50">·</span> Creditcoin</div><h1 className="hero-title mt-6">Verified commercial payments become <span>portable financial reputation.</span></h1><p className="hero-copy">Agencies and exporters get paid on-chain. Banks still see a blank file. FactorX turns those verified invoices into a passport a lender can read on Creditcoin.</p><div className="mt-8 flex flex-wrap gap-3"><Link href="/dashboard" className="btn-primary">Launch Passport</Link></div><div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-xs text-muted"><span>Verified payments</span><span>Living score</span><span>Portable identity</span></div></div><PassportPreview /></div></section>
 
       <section className="relative z-10 mx-auto max-w-6xl px-6 pb-24"><div className="metrics-card grid overflow-hidden rounded-3xl border border-border bg-card shadow-card md:grid-cols-3">{metrics.map((m,i)=><div key={m.label} className={`metric-item ${i>0?"md:border-l md:border-border":""}`}><div className="flex items-center gap-2 text-muted"><Icon type={m.icon} className="h-4 w-4 text-accent"/><p className="text-[11px] font-semibold uppercase tracking-[0.12em]">{m.label}</p></div><p className="mt-4 text-3xl font-bold tracking-tight">{m.value}</p><p className="mt-1 text-[12px] text-muted">{m.sub}</p></div>)}</div></section>
 
@@ -56,8 +56,31 @@ export default function LandingPage() {
 
       <section className="mx-auto max-w-6xl px-6 py-24"><div className="trust-card"><div className="trust-intro"><IconBox type="shield"/><div><p className="section-kicker">Verification model</p><h2 className="mt-2 text-2xl font-bold tracking-tight">Reputation begins with a verifiable payment.</h2><p className="mt-3 max-w-lg text-sm leading-relaxed text-muted">Every meaningful FactorX passport update follows the same auditable path from commercial activity to cryptographic proof to portable reputation.</p></div></div><div className="trust-flow"><div><Icon type="receipt"/><span>Commercial payment</span></div><i>→</i><div><Icon type="shield"/><span>Attestcoin proof</span></div><i>→</i><div><Icon type="badge"/><span>Creditcoin passport</span></div></div></div></section>
 
-      <section className="px-6 pb-24"><div className="cta-panel mx-auto max-w-5xl text-center"><p className="section-kicker">Ready to explore</p><h2 className="mx-auto mt-3 max-w-2xl text-3xl font-bold tracking-tight sm:text-4xl">Build commercial reputation that moves with you.</h2><p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-muted">Explore the dashboard, submit a verified proof, and see how commercial activity becomes portable financial identity.</p><div className="mt-8"><Link href="/dashboard" className="btn-primary">Open Passport Dashboard</Link></div><p className="mt-6 text-xs text-muted">Powered by Attestcoin verification · Recorded on Creditcoin</p></div></section>
+      <section className="mx-auto max-w-6xl px-6 pb-8">
+        <p className="section-kicker">Who it is for</p>
+        <h2 className="section-title mt-3 max-w-2xl">Cashflow the bank cannot see. Credit a lender can read.</h2>
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted">Built first for digital studios, freelancers, and exporters who collect USDC or ETH from abroad and still cannot borrow against that trail.</p>
+        <div className="mt-8 grid gap-4 md:grid-cols-3">
+          <article className="premium-card compact-card">
+            <p className="text-[11px] font-medium uppercase tracking-wider text-muted">The studio</p>
+            <h3 className="mt-2">Get paid. Prove it. Keep the file.</h3>
+            <p>Paste a source-chain settlement. Attestcoin attests it. Your score and soulbound passport update. No bank PDF.</p>
+          </article>
+          <article className="premium-card compact-card">
+            <p className="text-[11px] font-medium uppercase tracking-wider text-muted">The lender</p>
+            <h3 className="mt-2">Four reads. An offer.</h3>
+            <p>Score, volume, counterparties, open advance. MockConsumer already does this live. Your vault would disburse next.</p>
+          </article>
+          <article className="premium-card compact-card">
+            <p className="text-[11px] font-medium uppercase tracking-wider text-muted">The judge</p>
+            <h3 className="mt-2">Follow the receipt.</h3>
+            <p>Explorer → payment hash → Attestcoin → Creditcoin. Same path a creditor would audit.</p>
+          </article>
+        </div>
+      </section>
+
+      <section className="px-6 pb-24"><div className="cta-panel mx-auto max-w-5xl text-center"><p className="section-kicker">Ready to explore</p><h2 className="mx-auto mt-3 max-w-2xl text-3xl font-bold tracking-tight sm:text-4xl">Build commercial reputation that moves with you.</h2><p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-muted">Open the app. Submit a verified payment. Watch the passport, the score, and the lender offer move.</p><div className="mt-8"><Link href="/dashboard" className="btn-primary">Open Passport Dashboard</Link></div><p className="mt-6 text-xs text-muted">Powered by Attestcoin verification · Recorded on Creditcoin</p></div></section>
     </main>
-    <footer className="border-t border-border-subtle py-7 text-center text-[12px] text-muted">FactorX · Commercial Cashflow Passport · Attestcoin on Creditcoin</footer>
+    <footer className="border-t border-border-subtle py-7 text-center text-[12px] text-muted">FactorX · Creditcoin testnet 102031 · Attestcoin readability · Live contracts</footer>
   </div>;
 }

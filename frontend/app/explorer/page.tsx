@@ -79,7 +79,7 @@ export default function ExplorerPage() {
         </p>
         <h1 className="mb-3 text-3xl font-semibold tracking-tight">Attestation explorer</h1>
         <p className="mb-8 max-w-xl text-[14px] leading-relaxed text-muted">
-          Every score increase is backed by a Sepolia payment and an Attestcoin
+          Every score increase is backed by a source-chain payment and an Attestcoin
           inclusion proof. Inspect the trail a judge would open.
         </p>
 
@@ -125,7 +125,7 @@ export default function ExplorerPage() {
                     <dt className="text-muted">Amount</dt>
                     <dd className="font-mono">{formatEther(r.amount)} ETH</dd>
                     <dt className="text-muted">Source chain</dt>
-                    <dd>Ethereum Sepolia (chainKey 1)</dd>
+                    <dd>Source chain (attested)</dd>
                     <dt className="text-muted">Status</dt>
                     <dd>Verified</dd>
                     <dt className="text-muted">Payer</dt>

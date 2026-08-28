@@ -229,11 +229,11 @@ export default function DashboardPage() {
       return;
     }
     if (!txHash.startsWith("0x") || txHash.length !== 66) {
-      setStatus("Paste a real Sepolia tx hash (0x + 64 hex).");
+      setStatus("Paste a payment transaction hash (0x + 64 hex).");
       return;
     }
     setLoading(true);
-    setStatus("Fetching Attestcoin proof (wait if the Sepolia block is not attested yet)…");
+    setStatus("Fetching Attestcoin proof (wait if the source block is not attested yet)…");
     try {
       const hash = txHash as `0x${string}`;
       const proofRes = await fetch(`/api/attestcoin/proof?tx=${hash}`);
@@ -246,7 +246,7 @@ export default function DashboardPage() {
       if (proofJson.proofError || !proofJson.proof) {
         setStatus(
           proofJson.proofError ||
-            `Sepolia block ${proofJson.blockNumber} found. Wait for attestation, then retry.`
+            `Source block ${proofJson.blockNumber} found. Wait for attestation, then retry.`
         );
         setLoading(false);
         return;
@@ -262,7 +262,7 @@ export default function DashboardPage() {
           : "Proof fetched — recording on FactorX…"
       );
       if (!proofJson.amountWei || BigInt(proofJson.amountWei) === BigInt(0)) {
-        setStatus("Could not read payment amount from the Sepolia tx (value and Transfer logs were 0).");
+        setStatus("Could not read payment amount from the source transaction.");
         setLoading(false);
         return;
       }
@@ -297,7 +297,7 @@ export default function DashboardPage() {
         timeout: 60_000,
       });
       if (receipt.status !== "success") {
-        setStatus("This Sepolia hash was already recorded. Paste a new payment hash.");
+        setStatus("This payment hash was already recorded. Paste a new hash.");
         return;
       }
       setStatus("Payment verified & recorded");
@@ -310,7 +310,7 @@ export default function DashboardPage() {
       console.error(e);
       const blob = `${errMsg(e)} ${JSON.stringify(e)}`.toLowerCase();
       if (blob.includes("proofalreadyused") || blob.includes("already used") || blob.includes("processedproofs")) {
-        setStatus("This Sepolia hash was already recorded. Paste a new payment hash.");
+        setStatus("This payment hash was already recorded. Paste a new hash.");
       } else {
         setStatus("");
       }
@@ -450,7 +450,7 @@ export default function DashboardPage() {
         <div className="mb-7 flex flex-wrap items-end justify-between gap-3">
           <div>
             <h1 className="text-xl font-semibold tracking-tight">Passport Overview</h1>
-            <p className="mt-0.5 text-[13px] text-muted">Live · Creditcoin Testnet 102031</p>
+            <p className="mt-0.5 text-[13px] text-muted">Live · Creditcoin</p>
           </div>
           <button
             onClick={() => setShowSubmit(true)}
