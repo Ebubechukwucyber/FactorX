@@ -14,75 +14,89 @@ export default function DocsPage() {
             <span className="text-[13px] font-semibold">FactorX</span>
           </Link>
           <div className="flex items-center gap-3">
-            <Link href="/dashboard" className="text-[13px] text-muted hover:text-[var(--text)]">
-              Dashboard
-            </Link>
+            <Link href="/explorer" className="text-[13px] text-muted hover:text-[var(--text)]">Explorer</Link>
+            <Link href="/dashboard" className="text-[13px] text-muted hover:text-[var(--text)]">Dashboard</Link>
             <ThemeToggle />
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-3xl px-6 py-14 text-[15px] leading-relaxed">
+      <main className="mx-auto max-w-3xl px-6 py-14 text-[15px] leading-[1.7]">
         <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-accent">Technical documentation</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight">Attestcoin Protocol integration</h1>
-        <p className="mt-3 text-muted">
-          How FactorX uses Attestcoin readability to turn a source-chain payment into a Creditcoin passport.
-          This page is the setup note required for BUIDL CTC 2026 Fall.
+        <p className="mt-4 text-muted">
+          FactorX treats Attestcoin as the trust boundary, not as a badge. A Creditcoin passport row is written only after a source-chain inclusion proof is available from Attestcoin infrastructure. This note is the setup document for BUIDL CTC 2026 Fall: networks, proof path, contract surface, and what a judge should inspect.
+        </p>
+        <p className="mt-3 text-[13px] text-muted">
+          Official references:{" "}
+          <a className="text-accent hover:underline" href="https://docs.attestcoin.org/" target="_blank" rel="noreferrer">docs.attestcoin.org</a>
+          {" · "}
+          <a className="text-accent hover:underline" href="https://attestcoin.org/" target="_blank" rel="noreferrer">attestcoin.org</a>
+          {" · "}
+          <a className="text-accent hover:underline" href="/FactorX-Protocol-Brief.pdf">Protocol brief (PDF)</a>
         </p>
 
-        <h2 className="mt-12 text-xl font-semibold">What FactorX uses</h2>
+        <h2 className="mt-14 text-xl font-semibold">Scope</h2>
         <p className="mt-3 text-muted">
-          Readability only. Writability is out of season scope. FactorX never asks Attestcoin to send a source-chain transaction. It proves that a payment already included on the source chain is real, then writes the commercial file on Creditcoin.
-        </p>
-
-        <h2 className="mt-12 text-xl font-semibold">Networks</h2>
-        <p className="mt-3 text-muted">
-          Source payments: EVM origin used in this demo (Ethereum Sepolia, Attestcoin chainKey 1). Execution: Creditcoin Testnet 102031.
-        </p>
-
-        <h2 className="mt-12 text-xl font-semibold">Endpoints</h2>
-        <p className="mt-3 text-muted">
-          ASC dashboard for attested height. Proof Builder for header, transaction bytes, Merkle proof, and continuity proof. USC SDK 0.18.0 verifySingle. BlockProver precompile 0x0FD2. FactorX verifyAndRecord after the proof path succeeds.
-        </p>
-
-        <h2 className="mt-12 text-xl font-semibold">Runtime flow</h2>
-        <p className="mt-3 text-muted">
-          1. A counterparty pays the merchant on the source chain. Self-pays are rejected later.
-          2. GET /api/attestcoin/proof?tx=0x… loads the source receipt, waits until Attestcoin latest attested height covers that block, then asks Proof Builder for inclusion proofs.
-          3. The browser runs USC SDK verifySingle against Creditcoin.
-          4. The merchant signs AttestcoinVerifier.verifyAndRecord on chain 102031 with source tx hash, event type, payer, amount, and invoice id.
-          5. The verifier records the receivable, writes invoice confidence, mints the soulbound passport on first success, and updates the score.
+          Season rules require a meaningful Attestcoin integration. FactorX implements <b className="font-medium text-[var(--text)]">readability</b>: Creditcoin consumes attested facts about another chain. It does not implement writability (Attestcoin-assisted egress back onto the source chain). That matches the AMA: writability is out of scope unless a product truly needs it.
         </p>
         <p className="mt-3 text-muted">
-          Same-transaction Solidity verifyAndEmit at 0x0FD2 did not match this testnet public selector. The shipped path is SDK verification plus an on-chain record bound to the attested source hash. Replay of that hash reverts.
+          The attested fact FactorX cares about is a commercial payment already included in a source-chain block. The product question is not “did a wallet click a button on Creditcoin?” It is “did a counterparty settle on a chain Attestcoin watches, and can that settlement be replay-safe on Creditcoin?”
         </p>
 
-        <h2 className="mt-12 text-xl font-semibold">Why Attestcoin is required</h2>
+        <h2 className="mt-14 text-xl font-semibold">Environments</h2>
         <p className="mt-3 text-muted">
-          The passport and score only move after a source payment that Attestcoin has attested. A raw Creditcoin transfer does not raise the file. Without attested height and proof, FactorX will not record the receivable.
+          Source observations use Attestcoin <code className="text-[13px]">chainKey = 1</code> (Ethereum Sepolia in this deployment). Execution, storage, and the passport live on Creditcoin Testnet, EVM chain id <code className="text-[13px]">102031</code>, RPC <code className="text-[13px]">https://rpc.cc3-testnet.creditcoin.network</code>.
         </p>
-
-        <h2 className="mt-12 text-xl font-semibold">Contracts on Creditcoin testnet</h2>
-        <p className="mt-3 font-mono text-[12px] leading-7 text-muted">
-          Registry 0x1e578b5aE11BEE48361b70470E8FfD939148b7F7<br/>
-          Verifier 0x18CD4A1444933E3FCE147fB2e953ECae23e03AD1<br/>
-          Score 0xe90195df4183865CF1533F5B90f15AC37EEbdE02<br/>
-          Credit 0x96e99678067c62c441152E69975438768e3afEAf<br/>
-          Passport 0xEB1D16bA39D752B5eCABB8D13dA8C8AA364376Ea<br/>
-          Intent 0xB37b771B1337cF555dFAeF8bd7190445D75796aa<br/>
-          Consumer 0x2A845d32837CB3549f3e14cE160586961c522AEc
-        </p>
-
-        <h2 className="mt-12 text-xl font-semibold">Judge checklist</h2>
         <p className="mt-3 text-muted">
-          Source payment on the origin explorer. Attested height on the ASC dashboard. Creditcoin verifyAndRecord transaction. In-app explorer receipt. MockConsumer BetterTermsOffered log.
+          Attestors trail source tip to reduce reorg risk. A payment in block N is not usable until Attestcoin’s latest attested height for chainKey 1 is ≥ N. The UI wait state is that lag, not a spinner with no protocol meaning.
         </p>
 
-        <p className="mt-12 text-[13px] text-muted">
-          Protocol brief PDF:{" "}
-          <a className="text-accent hover:underline" href="/FactorX-Protocol-Brief.pdf">
-            FactorX-Protocol-Brief.pdf
-          </a>
+        <h2 className="mt-14 text-xl font-semibold">Proof path</h2>
+        <p className="mt-3 text-muted">
+          <code className="text-[13px]">frontend/app/api/attestcoin/proof</code> is the only server route. It takes a source transaction hash, fetches the origin receipt, rejects missing or reverted receipts, then polls attested height. When the height is live it requests header bytes, encoded transaction, Merkle proof, and continuity proof from the Creditcoin Proof Builder.
+        </p>
+        <p className="mt-3 text-muted">
+          The browser then runs <code className="text-[13px]">@gluwa/usc-sdk@0.18.0</code> <code className="text-[13px]">verifySingle</code> against Creditcoin. That is the Attestcoin SDK entry the docs call out for dapp builders. Only after <code className="text-[13px]">verifySingle</code> returns true does the wallet send <code className="text-[13px]">AttestcoinVerifier.verifyAndRecord</code>.
+        </p>
+        <p className="mt-3 text-muted">
+          A first implementation attempted a same-transaction Solidity call to BlockProver <code className="text-[13px]">0x0FD2</code> (<code className="text-[13px]">verifyAndEmit</code>). The public selector on this testnet did not match the interface we compiled. Rather than fake a precompile success, FactorX kept the SDK verification (the supported builder path) and bound the Creditcoin record to the attested source hash with replay protection. Judges should treat that as an explicit tradeoff, not as “Attestcoin mentioned in README.”
+        </p>
+
+        <h2 className="mt-14 text-xl font-semibold">What gets written on Creditcoin</h2>
+        <p className="mt-3 text-muted">
+          <code className="text-[13px]">verifyAndRecord</code> is permissioned to the verifier. It stores payer, beneficiary, amount, event type, and source tx hash on <code className="text-[13px]">ReceivableRegistry</code>. The same call writes invoice confidence on <code className="text-[13px]">CommercialIntent</code> (1 = payment only, 2 = invoice id present) and mints a soulbound <code className="text-[13px]">PassportNFT</code> on the first success for that wallet. <code className="text-[13px]">CommercialScore</code> is a pure view over registry statistics: payment count, unique counterparties, volume, recency.
+        </p>
+        <p className="mt-3 text-muted">
+          Two protocol-level rejects matter more than the score formula. <code className="text-[13px]">payer == beneficiary</code> reverts (<code className="text-[13px]">SelfTransfer</code>). A reused source tx hash reverts (<code className="text-[13px]">ProofAlreadyUsed</code>). Those rules stop a merchant from farming the passport with loops or screenshots.
+        </p>
+
+        <h2 className="mt-14 text-xl font-semibold">Consumer side</h2>
+        <p className="mt-3 text-muted">
+          FactorX is a bureau. <code className="text-[13px]">MockConsumer</code> is a separate contract that reads <code className="text-[13px]">getCommercialScore</code>, <code className="text-[13px]">outstanding</code>, and <code className="text-[13px]">getAvailableCredit</code>, then emits <code className="text-[13px]">BetterTermsOffered</code>. If the 30% volume cap is fully drawn, the message is a refusal. That event is the composability proof: another program used Attestcoin-backed state without a FactorX admin key.
+        </p>
+
+        <h2 className="mt-14 text-xl font-semibold">Deployed addresses (Creditcoin 102031)</h2>
+        <pre className="mt-4 overflow-x-auto rounded-2xl border border-border bg-card p-4 font-mono text-[12px] leading-6 text-muted">{`ReceivableRegistry  0x1e578b5aE11BEE48361b70470E8FfD939148b7F7
+AttestcoinVerifier  0x18CD4A1444933E3FCE147fB2e953ECae23e03AD1
+CommercialScore     0xe90195df4183865CF1533F5B90f15AC37EEbdE02
+FactorCredit        0x96e99678067c62c441152E69975438768e3afEAf
+PassportNFT         0xEB1D16bA39D752B5eCABB8D13dA8C8AA364376Ea
+CommercialIntent    0xB37b771B1337cF555dFAeF8bd7190445D75796aa
+MockConsumer        0x2A845d32837CB3549f3e14cE160586961c522AEc`}</pre>
+
+        <h2 className="mt-14 text-xl font-semibold">How to reproduce</h2>
+        <p className="mt-3 text-muted">
+          1. Pay the merchant from a different origin wallet so the transfer is not a self-send.
+          2. Wait until ASC shows attested height ≥ that block for chainKey 1.
+          3. Open the app, submit the hash, confirm <code className="text-[13px]">verifyAndRecord</code>.
+          4. Confirm the row on <Link href="/explorer" className="text-accent hover:underline">/explorer</Link> and the soulbound token on Blockscout.
+          5. Call Check terms and read the consumer log.
+        </p>
+
+        <h2 className="mt-14 text-xl font-semibold">Limits (stated for judges)</h2>
+        <p className="mt-3 text-muted">
+          Amounts are native 18-decimal units from the source transaction, not USD. Advance is a booked line, not a vault disbursement. Invoice confidence is an id flag, not full invoice-amount matching. Those are product boundaries. They do not remove Attestcoin from the critical path.
         </p>
       </main>
     </div>
