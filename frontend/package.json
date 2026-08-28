@@ -14,7 +14,7 @@
     "viem": "^2.21.0",
     "clsx": "^2.1.1",
     "ethers": "^6.13.0",
-    "@gluwa/usc-sdk": "^1.0.0"
+    "@gluwa/usc-sdk": "0.18.0"
   },
   "devDependencies": {
     "@types/node": "^20",
