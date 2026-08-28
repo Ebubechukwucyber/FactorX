@@ -6,9 +6,10 @@ interface Props {
   onClose: () => void;
   onSubmit?: (txHash: string, eventType: number, invoiceId: string) => void;
   loading?: boolean;
+  status?: string;
 }
 
-export default function SubmitProof({ onClose, onSubmit, loading }: Props) {
+export default function SubmitProof({ onClose, onSubmit, loading, status }: Props) {
   const [txHash, setTxHash] = useState("");
   const [eventType, setEventType] = useState(0);
   const [invoiceId, setInvoiceId] = useState("");
@@ -66,6 +67,18 @@ export default function SubmitProof({ onClose, onSubmit, loading }: Props) {
           onChange={(e) => setInvoiceId(e.target.value)}
           className="mb-6 w-full rounded-xl border border-border bg-bg px-3.5 py-2.5 font-mono text-[13px] text-[var(--text)] placeholder:text-muted/50 focus:border-accent/50 focus:outline-none"
         />
+
+        {status &&
+          (status.toLowerCase().includes("already") ||
+            status.toLowerCase().includes("verified")) && (
+            <p
+              className={`mb-3 text-[12px] ${
+                status.toLowerCase().includes("already") ? "text-red-400" : "text-accent"
+              }`}
+            >
+              {status}
+            </p>
+          )}
 
         <div className="flex gap-2.5">
           <button
