@@ -17,7 +17,7 @@ import CreditCard from "@/components/CreditCard";
 import ActivityList from "@/components/ActivityList";
 import SubmitProof from "@/components/SubmitProof";
 import StatsRow from "@/components/StatsRow";
-import { publicClient, connectWallet, errMsg } from "@/lib/chain";
+import { publicClient, connectWallet, connectDemo, errMsg } from "@/lib/chain";
 import {
   ADDRESSES,
   scoreAbi,
@@ -93,7 +93,7 @@ export default function DashboardPage() {
       setAvailableCredit(Number(formatEther(avail as bigint)));
     } catch (e) {
       console.error(e);
-      setStatus("Could not read contracts — is Anvil running on :8545?");
+      setStatus("Could not read contracts — switch MetaMask to Creditcoin Testnet (102031).");
     }
   }, [address]);
 
@@ -104,7 +104,7 @@ export default function DashboardPage() {
   }, [refresh]);
 
   async function onConnect() {
-    setStatus("Opening MetaMask…");
+    setStatus("Opening wallet…");
     try {
       const { address: addr, walletClient: wc } = await connectWallet();
       setAddress(addr);
@@ -112,6 +112,19 @@ export default function DashboardPage() {
       setStatus(`Connected: ${addr.slice(0, 6)}…${addr.slice(-4)}`);
     } catch (e: unknown) {
       console.error("[FactorX] connect error", e);
+      setStatus(errMsg(e));
+    }
+  }
+
+  async function onDemoConnect() {
+    setStatus("Demo Connect disabled on Creditcoin.");
+    try {
+      const { address: addr, walletClient: wc } = await connectDemo();
+      setAddress(addr);
+      setWalletClient(wc);
+      setStatus(`Demo connected: ${addr.slice(0, 6)}…${addr.slice(-4)}`);
+    } catch (e: unknown) {
+      console.error("[FactorX] demo connect", e);
       setStatus(errMsg(e));
     }
   }
@@ -263,16 +276,22 @@ export default function DashboardPage() {
                 <span className="font-mono text-muted">{short}</span>
               </button>
             ) : (
-              <button
-                type="button"
-                onClick={() => {
-                  console.log("[FactorX] Connect clicked");
-                  void onConnect();
-                }}
-                className="relative z-50 cursor-pointer rounded-full bg-accent px-3.5 py-1.5 text-[12px] font-semibold text-white hover:bg-accent-dim"
-              >
-                Connect Wallet
-              </button>
+              <div className="relative z-50 flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => void onDemoConnect()}
+                  className="cursor-pointer rounded-full bg-accent px-3.5 py-1.5 text-[12px] font-semibold text-white hover:bg-accent-dim"
+                >
+                  Demo Connect (Anvil)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void onConnect()}
+                  className="cursor-pointer rounded-full border border-border bg-card px-3 py-1.5 text-[11px] font-medium text-muted hover:text-[var(--text)]"
+                >
+                  MetaMask
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -282,7 +301,7 @@ export default function DashboardPage() {
         <div className="mb-7 flex flex-wrap items-end justify-between gap-3">
           <div>
             <h1 className="text-xl font-semibold tracking-tight">Passport Overview</h1>
-            <p className="mt-0.5 text-[13px] text-muted">Live · Anvil chain 31337</p>
+            <p className="mt-0.5 text-[13px] text-muted">Live · Creditcoin Testnet 102031</p>
           </div>
           <button
             onClick={() => setShowSubmit(true)}
@@ -301,7 +320,7 @@ export default function DashboardPage() {
 
         {!isConnected && (
           <div className="mb-6 rounded-xl border border-accent/30 bg-[var(--accent-soft)] px-4 py-3 text-[13px]">
-            Connect MetaMask to Anvil (http://127.0.0.1:8545, chain id 31337). Import Anvil key #0 if needed.
+            Connect MetaMask on Creditcoin Testnet (chain 102031). Use the deployer wallet — it needs tCTC.
           </div>
         )}
 
