@@ -19,7 +19,7 @@
 
 ## What this is
 
-FactorX turns a **real payment on Sepolia** into a **soulbound commercial identity on Creditcoin**.
+FactorX turns a **real payment** into a **soulbound commercial identity on Creditcoin**.
 
 Banks do not underwrite an African studio that gets paid in USDC or ETH. The trail exists on-chain; the credit file does not. FactorX is that file:
 
