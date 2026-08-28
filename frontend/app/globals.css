@@ -103,3 +103,13 @@ body {
 .cta-panel { border:1px solid var(--border); border-radius:2rem; padding:4rem 1.5rem; background:radial-gradient(circle at 50% 0%,var(--accent-soft),transparent 42%),var(--card); box-shadow:0 25px 70px rgba(15,23,42,.05); }
 @media (max-width: 767px) { .hero-title { font-size:3rem; }.hero-copy { font-size:.94rem; }.metrics-card { grid-template-columns:1fr; }.metric-item + .metric-item { border-top:1px solid var(--border); }.process-grid:before { display:none; }.mini-score { grid-template-columns:1fr; }.trust-flow { flex-direction:column; align-items:stretch; }.trust-flow i { transform:rotate(90deg); text-align:center; }.trust-intro { flex-direction:column; }.cta-panel { padding:3rem 1.25rem; } }
 @media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; scroll-behavior:auto !important; } }
+
+@keyframes navBar {
+  from { transform: translateX(-120%); }
+  to { transform: translateX(320%); }
+}
+.animate-nav-bar { animation: navBar 1s linear infinite; }
+@media (max-width: 640px) {
+  .hero-title { font-size: 2.15rem !important; }
+  .hero-copy { font-size: 0.92rem; }
+}

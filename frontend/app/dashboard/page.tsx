@@ -11,7 +11,7 @@ import {
   type Address,
   type WalletClient,
 } from "viem";
-import ThemeToggle from "@/components/ThemeToggle";
+import SiteNav from "@/components/SiteNav";
 import ScoreHero from "@/components/ScoreHero";
 import CreditCard from "@/components/CreditCard";
 import ActivityList from "@/components/ActivityList";
@@ -409,47 +409,35 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-bg text-[var(--text)]">
-      <header className="sticky top-0 z-40 border-b border-border-subtle bg-bg/90 backdrop-blur-md">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6">
-        <Link href="/" className="flex items-center gap-2.5">
-            <Image src="/logo.png" alt="FactorX" width={28} height={28} className="h-7 w-7 object-contain" priority />
-            <div className="leading-none">
-              <p className="text-[13px] font-semibold tracking-wide">FactorX</p>
-              <p className="text-[10px] text-muted">Commercial Cashflow Passport</p>
-            </div>
-          </Link>
-          <div className="flex items-center gap-2.5">
-            <Link href="/explorer" className="rounded-full bg-accent px-3.5 py-1.5 text-[12px] font-semibold text-white hover:bg-accent-dim">
-              Explorer
-            </Link>
-            <ThemeToggle />
-            {isConnected ? (
-              <button
-                type="button"
-                onClick={onDisconnect}
-                className="relative z-50 flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-[11px]"
-              >
-                <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-                <span className="font-mono text-muted">{short}</span>
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => void onConnect()}
-                className="relative z-50 cursor-pointer rounded-full bg-accent px-3.5 py-1.5 text-[12px] font-semibold text-white hover:bg-accent-dim"
-              >
-                Connect wallet
-              </button>
-            )}
-          </div>
-        </div>
-      </header>
+      <SiteNav
+        compact
+        right={
+          isConnected ? (
+            <button
+              type="button"
+              onClick={onDisconnect}
+              className="flex max-w-[44vw] items-center gap-2 truncate rounded-full border border-border bg-card px-3 py-1.5 text-[11px] sm:max-w-none"
+            >
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
+              <span className="truncate font-mono text-muted">{short}</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => void onConnect()}
+              className="rounded-full bg-accent px-3.5 py-1.5 text-[12px] font-semibold text-white"
+            >
+              Connect
+            </button>
+          )
+        }
+      />
 
-      <main className="mx-auto max-w-6xl px-6 py-8">
-        <div className="mb-7 flex flex-wrap items-end justify-between gap-3">
+      <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
+        <div className="mb-7 flex animate-fade-up flex-wrap items-end justify-between gap-3">
           <div>
             <h1 className="text-xl font-semibold tracking-tight">Passport Overview</h1>
-            <p className="mt-0.5 text-[13px] text-muted">Live · Creditcoin</p>
+            <p className="mt-0.5 hidden text-[13px] text-muted sm:block">Live · Creditcoin</p>
           </div>
           <button
             onClick={() => setShowSubmit(true)}
@@ -460,7 +448,7 @@ export default function DashboardPage() {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
+        <div className="grid animate-fade-up delay-1 grid-cols-1 gap-5 lg:grid-cols-12">
           <div className="lg:col-span-3">
             <CreditCard available={availableCredit} onRequest={onRequestAdvance} />
           </div>
@@ -493,7 +481,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div className="mt-8 grid animate-fade-up delay-2 grid-cols-1 gap-4 lg:grid-cols-2">
           <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4">
             <img
               src="/passport-nft.jpg"

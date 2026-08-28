@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import ThemeToggle from "@/components/ThemeToggle";
+import SiteNav from "@/components/SiteNav";
 
 type IconProps = { className?: string };
 function Icon({ type, className = "h-5 w-5" }: { type: string } & IconProps) {
@@ -41,7 +41,7 @@ export default function LandingPage() {
     { icon: "shield", label: "Verified payments", value: "12", sub: "Cryptographically attested" },
   ];
   return <div className="min-h-screen bg-bg text-[var(--text)]">
-    <header className="sticky top-0 z-40 border-b border-border-subtle bg-bg/80 backdrop-blur-xl"><div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6"><Link href="/" className="flex items-center gap-2.5"><Image src="/logo.png" alt="FactorX" width={36} height={32} className="h-8 w-auto object-contain" priority /><span className="text-[15px] font-semibold tracking-tight">FactorX</span></Link><div className="flex items-center gap-4"><Link href="/docs" className="hidden text-[13px] text-muted hover:text-[var(--text)] sm:inline">Docs</Link><a href="/FactorX-Protocol-Brief.pdf" className="hidden text-[13px] text-muted hover:text-[var(--text)] sm:inline">Brief</a><Link href="/explorer" className="hidden text-[13px] text-muted hover:text-[var(--text)] sm:inline">Explorer</Link><ThemeToggle /><Link href="/dashboard" className="btn-primary btn-small">Open App</Link></div></div></header>
+    <SiteNav />
 
     <main>
       <section className="hero relative overflow-hidden"><div className="hero-glow hero-glow-one"/><div className="hero-glow hero-glow-two"/><div className="relative mx-auto grid max-w-6xl items-center gap-14 px-6 py-24 md:grid-cols-[1.05fr_.95fr] md:py-32"><div className="animate-fade-up"><div className="protocol-pill"><span className="status-dot"/> Attestcoin Protocol <span className="opacity-50">·</span> Creditcoin</div><h1 className="hero-title mt-6">Verified commercial payments become <span>portable financial reputation.</span></h1><p className="hero-copy">Agencies and exporters get paid on-chain. Banks still see a blank file. FactorX turns those verified invoices into a passport a lender can read on Creditcoin.</p><div className="mt-8 flex flex-wrap gap-3"><Link href="/dashboard" className="btn-primary">Launch Passport</Link><Link href="/docs" className="btn-secondary">Documentation</Link><a href="/FactorX-Protocol-Brief.pdf" className="btn-secondary">Protocol brief</a></div><div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-xs text-muted"><span>Verified payments</span><span>Living score</span><span>Portable identity</span></div></div><PassportPreview /></div></section>

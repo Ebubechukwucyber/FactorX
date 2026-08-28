@@ -2,24 +2,12 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import ThemeToggle from "@/components/ThemeToggle";
+import SiteNav from "@/components/SiteNav";
 
 export default function DocsPage() {
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
-      <header className="sticky top-0 z-40 border-b border-border-subtle bg-bg/90 backdrop-blur-md">
-        <div className="mx-auto flex h-14 max-w-3xl items-center justify-between px-6">
-          <Link href="/" className="flex items-center gap-2.5">
-            <Image src="/logo.png" alt="FactorX" width={28} height={28} className="h-7 w-7 object-contain" />
-            <span className="text-[13px] font-semibold">FactorX</span>
-          </Link>
-          <div className="flex items-center gap-3">
-            <Link href="/explorer" className="text-[13px] text-muted hover:text-[var(--text)]">Explorer</Link>
-            <Link href="/dashboard" className="text-[13px] text-muted hover:text-[var(--text)]">Dashboard</Link>
-            <ThemeToggle />
-          </div>
-        </div>
-      </header>
+      <SiteNav />
 
       <main className="mx-auto max-w-3xl px-6 py-14 text-[15px] leading-[1.7]">
         <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-accent">Technical documentation</p>

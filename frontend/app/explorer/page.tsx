@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { formatEther, type Address } from "viem";
-import ThemeToggle from "@/components/ThemeToggle";
+import SiteNav from "@/components/SiteNav";
 import { publicClient, connectWallet, errMsg } from "@/lib/chain";
 import { ADDRESSES, registryAbi } from "@/lib/contracts";
 
@@ -44,34 +44,7 @@ export default function ExplorerPage() {
 
   return (
     <main className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
-      <header className="flex items-center justify-between border-b border-border px-6 py-4">
-        <div className="flex items-center gap-4">
-          <Link href="/" className="text-[15px] font-semibold">
-            FactorX
-          </Link>
-          <span className="text-muted">/</span>
-          <span className="text-[13px] text-muted">Attestation explorer</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <Link href="/dashboard" className="text-[13px] text-muted hover:text-[var(--text)]">
-            Dashboard
-          </Link>
-          <ThemeToggle />
-          <button
-            onClick={async () => {
-              try {
-                const { address: a } = await connectWallet();
-                setAddress(a);
-              } catch (e) {
-                setStatus(errMsg(e));
-              }
-            }}
-            className="rounded-xl bg-accent px-3 py-1.5 text-[13px] font-semibold text-white"
-          >
-            {address ? `${address.slice(0, 6)}…${address.slice(-4)}` : "Connect"}
-          </button>
-        </div>
-      </header>
+      <SiteNav compact />
 
       <section className="mx-auto max-w-3xl px-6 py-10">
         <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.2em] text-accent">
