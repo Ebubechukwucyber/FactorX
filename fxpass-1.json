@@ -1,0 +1,9 @@
+{
+  "name": "FXPASS #1",
+  "description": "FactorX soulbound commercial cashflow passport on Creditcoin. Non-transferable.",
+  "image": "https://raw.githubusercontent.com/Ebubechukwucyber/FactorX/main/frontend/public/passport-nft.jpg",
+  "attributes": [
+    { "trait_type": "Type", "value": "Soulbound" },
+    { "trait_type": "Protocol", "value": "Attestcoin" }
+  ]
+}
