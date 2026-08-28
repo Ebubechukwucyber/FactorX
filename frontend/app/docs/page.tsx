@@ -93,12 +93,7 @@ MockConsumer        0x2A845d32837CB3549f3e14cE160586961c522AEc`}</pre>
           4. Confirm the row on <Link href="/explorer" className="text-accent hover:underline">/explorer</Link> and the soulbound token on Blockscout.
           5. Call Check terms and read the consumer log.
         </p>
-
-        <h2 className="mt-14 text-xl font-semibold">Limits (stated for judges)</h2>
-        <p className="mt-3 text-muted">
-          Amounts are native 18-decimal units from the source transaction, not USD. Advance is a booked line, not a vault disbursement. Invoice confidence is an id flag, not full invoice-amount matching. Those are product boundaries. They do not remove Attestcoin from the critical path.
-        </p>
-      </main>
+        </main>
     </div>
   );
 }
