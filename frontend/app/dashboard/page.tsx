@@ -140,17 +140,47 @@ export default function DashboardPage() {
       setStatus("Connect wallet first");
       return;
     }
+    if (!txHash.startsWith("0x") || txHash.length !== 66) {
+      setStatus("Paste a real Sepolia tx hash (0x + 64 hex).");
+      return;
+    }
     setLoading(true);
-    setStatus("Submitting proof…");
+    setStatus("Fetching Attestcoin proof (wait if the Sepolia block is not attested yet)…");
     try {
-      const hash = (
-        txHash.startsWith("0x") && txHash.length === 66
-          ? txHash
-          : keccak256(toBytes(txHash || `demo-${Date.now()}`))
-      ) as `0x${string}`;
-
+      const hash = txHash as `0x${string}`;
+      const proofRes = await fetch(`/api/attestcoin/proof?tx=${hash}`);
+      const proofJson = await proofRes.json();
+      if (!proofRes.ok) {
+        setStatus(proofJson.error || "Proof lookup failed");
+        setLoading(false);
+        return;
+      }
+      if (proofJson.proofError || !proofJson.proof) {
+        setStatus(
+          proofJson.proofError ||
+            `Sepolia block ${proofJson.blockNumber} found. Wait for attestation, then retry.`
+        );
+        setLoading(false);
+        return;
+      }
+      if (proofJson.verifiedOnPrecompile === false) {
+        setStatus("Attestcoin verifySingle returned false. See dashboard status.");
+        setLoading(false);
+        return;
+      }
+      setStatus(
+        proofJson.verifiedOnPrecompile
+          ? "Attestcoin precompile verified — recording on FactorX…"
+          : "Proof fetched — recording on FactorX…"
+      );
       const amount = parseEther("1.5");
-      const payer = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8" as Address;
+      const payer = (proofJson.from ||
+        "0x70997970C51812dc3A010C7d01b50e0d17dc79C8") as Address;
+      if (payer.toLowerCase() === address.toLowerCase()) {
+        setStatus("Payer cannot be your own wallet (self-transfer blocked).");
+        setLoading(false);
+        return;
+      }
 
       const hashTx = await walletClient.writeContract({
         address: ADDRESSES.verifier,

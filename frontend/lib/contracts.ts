@@ -2,12 +2,12 @@ import { type Address } from "viem";
 
 /** Creditcoin testnet — passport home (AMA) */
 export const ADDRESSES = {
-  registry: "0x1e578b5aE11BEE48361b70470E8FfD939148b7F7",
-  verifier: "0x282d281B101C7e9fd66996b12E72BD95E30a6b48",
-  score:    "0xe90195df4183865CF1533F5B90f15AC37EEbdE02",
-  credit:   "0x43B016716D7ED9a208158EF6b007B6133e7745C8",
-  passport: "0xa1C6E03E9d0aa5610a9098d723BDA6241C2daCC1",
-  consumer: "0x7458d143Ac7F00356A689AF40994d0255FB8d104",
+  registry: "0x1e578b5aE11BEE48361b70470E8FfD939148b7F7" as Address,
+  verifier: "0x0C77Efe4B1447Bb0fFd741186c94c4699856621A" as Address,
+  score: "0xe90195df4183865CF1533F5B90f15AC37EEbdE02" as Address,
+  credit: "0x43B016716D7ED9a208158EF6b007B6133e7745C8" as Address,
+  passport: "0xa1C6E03E9d0aa5610a9098d723BDA6241C2daCC1" as Address,
+  consumer: "0x7458d143Ac7F00356A689AF40994d0255FB8d104" as Address,
 } as const;
 
 export const creditcoinTestnet = {
@@ -123,6 +123,30 @@ export const verifierAbi = [
       { name: "beneficiary", type: "address" },
       { name: "payer", type: "address" },
       { name: "amount", type: "uint256" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "verifyAttestedPayment",
+    stateMutability: "nonpayable",
+    inputs: [
+      {
+        name: "a",
+        type: "tuple",
+        components: [
+          { name: "chainKey", type: "uint32" },
+          { name: "headerNumber", type: "uint64" },
+          { name: "sourceTxHash", type: "bytes32" },
+          { name: "eventType", type: "uint8" },
+          { name: "beneficiary", type: "address" },
+          { name: "payer", type: "address" },
+          { name: "amount", type: "uint256" },
+        ],
+      },
+      { name: "txBytes", type: "bytes" },
+      { name: "merkleProof", type: "bytes" },
+      { name: "continuityProof", type: "bytes" },
     ],
     outputs: [],
   },

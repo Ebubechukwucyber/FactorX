@@ -28,8 +28,8 @@ export default function SubmitProof({ onClose, onSubmit, loading }: Props) {
         </div>
 
         <p className="mb-5 text-[13px] leading-relaxed text-muted">
-          Paste a transaction hash (or leave blank for a demo hash). On Anvil this
-          uses the structured verification path; on testnet it will pass Attestcoin proof bytes.
+          Paste a Sepolia payment tx hash. Creditcoin will call BlockProver 0x0FD2
+          (chainKey 1). Payer must not be your own wallet.
         </p>
 
         <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-muted">
@@ -37,7 +37,7 @@ export default function SubmitProof({ onClose, onSubmit, loading }: Props) {
         </label>
         <input
           type="text"
-          placeholder="0x… (optional for local demo)"
+          placeholder="0x… Sepolia tx hash"
           value={txHash}
           onChange={(e) => setTxHash(e.target.value)}
           className="mb-4 w-full rounded-xl border border-border bg-bg px-3.5 py-2.5 font-mono text-[13px] text-[var(--text)] placeholder:text-muted/50 focus:border-accent/50 focus:outline-none"
