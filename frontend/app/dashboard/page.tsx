@@ -17,7 +17,6 @@ import CreditCard from "@/components/CreditCard";
 import ActivityList from "@/components/ActivityList";
 import SubmitProof from "@/components/SubmitProof";
 import StatsRow from "@/components/StatsRow";
-import PassportCard from "@/components/PassportCard";
 import { publicClient, connectWallet, connectDemo, errMsg } from "@/lib/chain";
 import {
   ADDRESSES,
