@@ -4,13 +4,14 @@ import { useState } from "react";
 
 interface Props {
   onClose: () => void;
-  onSubmit?: (txHash: string, eventType: number) => void;
+  onSubmit?: (txHash: string, eventType: number, invoiceId: string) => void;
   loading?: boolean;
 }
 
 export default function SubmitProof({ onClose, onSubmit, loading }: Props) {
   const [txHash, setTxHash] = useState("");
   const [eventType, setEventType] = useState(0);
+  const [invoiceId, setInvoiceId] = useState("");
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
@@ -55,6 +56,17 @@ export default function SubmitProof({ onClose, onSubmit, loading }: Props) {
           <option value={1}>InvoicePaid</option>
         </select>
 
+        <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-muted">
+          Invoice ID (optional — raises confidence)
+        </label>
+        <input
+          type="text"
+          placeholder="INV-1042 or 0x…"
+          value={invoiceId}
+          onChange={(e) => setInvoiceId(e.target.value)}
+          className="mb-6 w-full rounded-xl border border-border bg-bg px-3.5 py-2.5 font-mono text-[13px] text-[var(--text)] placeholder:text-muted/50 focus:border-accent/50 focus:outline-none"
+        />
+
         <div className="flex gap-2.5">
           <button
             onClick={onClose}
@@ -64,7 +76,7 @@ export default function SubmitProof({ onClose, onSubmit, loading }: Props) {
           </button>
           <button
             disabled={loading}
-            onClick={() => onSubmit?.(txHash, eventType)}
+            onClick={() => onSubmit?.(txHash, eventType, invoiceId)}
             className="flex-1 rounded-xl bg-accent py-2.5 text-[13px] font-semibold text-white transition hover:bg-accent-dim disabled:opacity-50"
           >
             {loading ? "Working…" : "Verify & Record"}

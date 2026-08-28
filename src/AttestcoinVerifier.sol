@@ -1,12 +1,21 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-/**
- * @title AttestcoinVerifier
- * @notice FactorX ASC. Attestcoin proof is produced by Proof Builder +
- *         official PrecompileBlockProver (0x0FD2) via gluwa usc-sdk.
- *         This contract records the commercial result after that proof exists.
- */
+interface IPassport {
+    function hasPassport(address user) external view returns (bool);
+    function mint(address to) external returns (uint256);
+}
+
+interface IIntent {
+    function recordIntent(
+        bytes32 sourceTxHash,
+        bytes32 invoiceId,
+        uint8 confidence,
+        address payer,
+        address beneficiary
+    ) external;
+}
+
 contract AttestcoinVerifier {
     uint32 public constant SEPOLIA_CHAIN_KEY = 1;
 
@@ -16,12 +25,15 @@ contract AttestcoinVerifier {
         uint256 amount,
         bytes32 sourceTxHash,
         uint256 timestamp,
-        uint8 eventType
+        uint8 eventType,
+        bytes32 invoiceId,
+        uint8 confidence,
+        uint256 passportId
     );
 
-    event AttestcoinVerified(bytes32 indexed sourceTxHash, uint32 chainKey, uint64 headerNumber);
-
     address public immutable registry;
+    address public immutable passport;
+    address public immutable intent;
     address public owner;
     mapping(bytes32 => bool) public processedProofs;
 
@@ -37,9 +49,13 @@ contract AttestcoinVerifier {
         _;
     }
 
-    constructor(address _registry) {
-        if (_registry == address(0)) revert ZeroAddress();
+    constructor(address _registry, address _passport, address _intent) {
+        if (_registry == address(0) || _passport == address(0) || _intent == address(0)) {
+            revert ZeroAddress();
+        }
         registry = _registry;
+        passport = _passport;
+        intent = _intent;
         owner = msg.sender;
     }
 
@@ -49,7 +65,8 @@ contract AttestcoinVerifier {
         uint8 eventType,
         address beneficiary,
         address payer,
-        uint256 amount
+        uint256 amount,
+        bytes32 invoiceId
     ) external {
         if (processedProofs[sourceTxHash]) revert ProofAlreadyUsed();
         if (eventType > 1) revert InvalidEventType();
@@ -59,8 +76,27 @@ contract AttestcoinVerifier {
         proof;
 
         processedProofs[sourceTxHash] = true;
-        emit AttestcoinVerified(sourceTxHash, SEPOLIA_CHAIN_KEY, 0);
-        emit PaymentVerified(beneficiary, payer, amount, sourceTxHash, block.timestamp, eventType);
+
+        uint8 confidence = invoiceId != bytes32(0) ? 2 : 1;
+
+        uint256 passportId;
+        if (!IPassport(passport).hasPassport(beneficiary)) {
+            passportId = IPassport(passport).mint(beneficiary);
+        }
+
+        IIntent(intent).recordIntent(sourceTxHash, invoiceId, confidence, payer, beneficiary);
+
+        emit PaymentVerified(
+            beneficiary,
+            payer,
+            amount,
+            sourceTxHash,
+            block.timestamp,
+            eventType,
+            invoiceId,
+            confidence,
+            passportId
+        );
 
         (bool success, ) = registry.call(
             abi.encodeWithSignature(

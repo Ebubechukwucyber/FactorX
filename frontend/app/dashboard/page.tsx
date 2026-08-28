@@ -215,7 +215,7 @@ export default function DashboardPage() {
     setStatus("");
   }
 
-  async function onSubmitProof(txHash: string, eventType: number) {
+  async function onSubmitProof(txHash: string, eventType: number, invoiceRef = "") {
     if (!walletClient || !address) {
       setStatus("Connect wallet first");
       return;
@@ -271,7 +271,15 @@ export default function DashboardPage() {
         address: ADDRESSES.verifier,
         abi: verifierAbi,
         functionName: "verifyAndRecord",
-        args: ["0x", hash, eventType, address, payer, amount],
+        args: [
+          "0x",
+          hash,
+          eventType,
+          address,
+          payer,
+          amount,
+          keccak256(toBytes((invoiceRef || "none").trim())) as `0x${string}`,
+        ],
         account: address,
         chain: undefined,
       });

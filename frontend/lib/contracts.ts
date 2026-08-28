@@ -3,11 +3,12 @@ import { type Address } from "viem";
 /** Creditcoin testnet — passport home (AMA) */
 export const ADDRESSES = {
   registry: "0x1e578b5aE11BEE48361b70470E8FfD939148b7F7" as Address,
-  verifier: "0x0C77Efe4B1447Bb0fFd741186c94c4699856621A" as Address,
+  verifier: "0x34C588fFaCC2009a73baa097253CBcF248DE3ED4" as Address,
   score: "0xe90195df4183865CF1533F5B90f15AC37EEbdE02" as Address,
   credit: "0x43B016716D7ED9a208158EF6b007B6133e7745C8" as Address,
   passport: "0xa1C6E03E9d0aa5610a9098d723BDA6241C2daCC1" as Address,
   consumer: "0x7458d143Ac7F00356A689AF40994d0255FB8d104" as Address,
+  intent: "0xB37b771B1337cF555dFAeF8bd7190445D75796aa" as Address,
 } as const;
 
 export const creditcoinTestnet = {
@@ -156,6 +157,7 @@ export const verifierAbi = [
       { name: "beneficiary", type: "address" },
       { name: "payer", type: "address" },
       { name: "amount", type: "uint256" },
+      { name: "invoiceId", type: "bytes32" },
     ],
     outputs: [],
   },
@@ -192,5 +194,43 @@ export const consumerAbi = [
     stateMutability: "nonpayable",
     inputs: [{ name: "user", type: "address" }],
     outputs: [{ name: "", type: "string" }],
+  },
+] as const;
+
+
+export const passportAbi = [
+  {
+    type: "function",
+    name: "hasPassport",
+    stateMutability: "view",
+    inputs: [{ name: "user", type: "address" }],
+    outputs: [{ name: "", type: "bool" }],
+  },
+  {
+    type: "function",
+    name: "tokenOf",
+    stateMutability: "view",
+    inputs: [{ name: "user", type: "address" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+] as const;
+
+export const intentAbi = [
+  {
+    type: "function",
+    name: "getIntent",
+    stateMutability: "view",
+    inputs: [{ name: "sourceTxHash", type: "bytes32" }],
+    outputs: [
+      {
+        type: "tuple",
+        components: [
+          { name: "invoiceId", type: "bytes32" },
+          { name: "confidence", type: "uint8" },
+          { name: "payer", type: "address" },
+          { name: "beneficiary", type: "address" },
+        ],
+      },
+    ],
   },
 ] as const;
