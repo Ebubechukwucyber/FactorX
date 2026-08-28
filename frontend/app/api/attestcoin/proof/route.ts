@@ -38,6 +38,31 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Source tx reverted on Sepolia" }, { status: 400 });
     }
 
+    const txRes = await fetch(SEPOLIA_RPC, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: 2,
+        method: "eth_getTransactionByHash",
+        params: [tx],
+      }),
+    });
+    const txObj = (await txRes.json()).result || {};
+    let amountWei = BigInt(txObj.value || "0x0");
+    const TRANSFER =
+      "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
+    for (const log of receipt.logs || []) {
+      if ((log.topics?.[0] || "").toLowerCase() === TRANSFER && log.data && log.data !== "0x") {
+        try {
+          const v = BigInt(log.data);
+          if (v > amountWei) amountWei = v;
+        } catch {
+          /* ignore */
+        }
+      }
+    }
+
     let proof: unknown = null;
     let verifiedOnPrecompile: boolean | null = null;
     let proofError: string | null = null;
@@ -83,8 +108,9 @@ export async function GET(req: NextRequest) {
       chainKey: CHAIN_KEY,
       txHash: tx,
       blockNumber,
-      from: receipt.from,
-      to: receipt.to,
+      from: txObj.from || receipt.from,
+      to: txObj.to || receipt.to,
+      amountWei: amountWei.toString(),
       proof,
       verifiedOnPrecompile,
       proofError,

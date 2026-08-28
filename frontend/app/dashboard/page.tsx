@@ -45,6 +45,7 @@ export default function DashboardPage() {
   const [volumeEth, setVolumeEth] = useState("0");
   const [counterparties, setCounterparties] = useState(0);
   const [availableCredit, setAvailableCredit] = useState(0);
+  const [debt, setDebt] = useState(0);
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const [activities, setActivities] = useState<Activity[]>([]);
@@ -54,7 +55,7 @@ export default function DashboardPage() {
   const refresh = useCallback(async () => {
     if (!address) return;
     try {
-      const [s, count, vol, unique, avail] = await Promise.all([
+      const [s, count, vol, unique, avail, recs, debtAmt] = await Promise.all([
         publicClient.readContract({
           address: ADDRESSES.score,
           abi: scoreAbi,
@@ -85,15 +86,94 @@ export default function DashboardPage() {
           functionName: "getAvailableCredit",
           args: [address],
         }),
+        publicClient.readContract({
+          address: ADDRESSES.registry,
+          abi: registryAbi,
+          functionName: "getReceivables",
+          args: [address],
+        }),
+        publicClient.readContract({
+          address: ADDRESSES.credit,
+          abi: creditAbi,
+          functionName: "outstanding",
+          args: [address],
+        }),
       ]);
       setScore(Number(s));
       setPayments(Number(count));
       setVolumeEth(formatEther(vol as bigint));
       setCounterparties(Number(unique));
       setAvailableCredit(Number(formatEther(avail as bigint)));
+      setDebt(Number(formatEther(debtAmt as bigint)));
+      const raw = (Array.isArray(recs) ? recs : []) as unknown[];
+      const list = raw.map((row) => {
+        const r = row as Record<string, unknown> | unknown[];
+        if (Array.isArray(r)) {
+          return {
+            payer: r[0] as Address,
+            amount: r[1] as bigint,
+            sourceTxHash: r[2] as `0x${string}`,
+            timestamp: r[3] as bigint,
+          };
+        }
+        return {
+          payer: r.payer as Address,
+          amount: r.amount as bigint,
+          sourceTxHash: r.sourceTxHash as `0x${string}`,
+          timestamp: r.timestamp as bigint,
+        };
+      });
+      const pays = [...list].reverse().map((r, i) => ({
+          id: Number(r.timestamp) + i,
+          from: r.payer ? `${r.payer.slice(0, 6)}…${r.payer.slice(-4)}` : "payer",
+          amount: `${Number(formatEther(r.amount || BigInt(0))).toFixed(4)} ETH`,
+          invoice: r.sourceTxHash ? String(r.sourceTxHash).slice(0, 10) : "—",
+          date: r.timestamp
+            ? new Date(Number(r.timestamp) * 1000).toLocaleString()
+            : "",
+          verified: true,
+        }));
+      if (Number(count) > 0) {
+        setStatus(`Loaded ${Number(count)} payment(s) for ${address.slice(0, 6)}…${address.slice(-4)}`);
+      }
+      const advances: typeof pays = [];
+      const debtEth = Number(formatEther(debtAmt as bigint));
+      if (debtEth > 0) {
+        advances.push({
+          id: 9_000_001,
+          from: "Advance",
+          amount: `${debtEth.toFixed(4)} ETH open`,
+          invoice: "credit line",
+          date: "Outstanding",
+          verified: true,
+        });
+      }
+      try {
+        const logs = await publicClient.getContractEvents({
+          address: ADDRESSES.credit,
+          abi: creditAbi,
+          eventName: "AdvanceOpened",
+          args: { user: address },
+          fromBlock: BigInt(5_300_000),
+        });
+        for (const [i, lg] of logs.entries()) {
+          const amt = (lg.args as { amount?: bigint }).amount || BigInt(0);
+          advances.push({
+            id: 10_000_000 + i,
+            from: "Advance opened",
+            amount: `${Number(formatEther(amt)).toFixed(4)} ETH`,
+            invoice: lg.transactionHash.slice(0, 10),
+            date: "Creditcoin",
+            verified: true,
+          });
+        }
+      } catch (err) {
+        console.warn("advance logs", err);
+      }
+      setActivities([...advances, ...pays]);
     } catch (e) {
       console.error(e);
-      setStatus("Could not read contracts — switch MetaMask to Creditcoin Testnet (102031).");
+      setStatus(e instanceof Error ? e.message : "Contract read failed");
     }
   }, [address]);
 
@@ -173,7 +253,12 @@ export default function DashboardPage() {
           ? "Attestcoin precompile verified — recording on FactorX…"
           : "Proof fetched — recording on FactorX…"
       );
-      const amount = parseEther("1.5");
+      if (!proofJson.amountWei || BigInt(proofJson.amountWei) === BigInt(0)) {
+        setStatus("Could not read payment amount from the Sepolia tx (value and Transfer logs were 0).");
+        setLoading(false);
+        return;
+      }
+      const amount = BigInt(proofJson.amountWei);
       const payer = (proofJson.from ||
         "0x70997970C51812dc3A010C7d01b50e0d17dc79C8") as Address;
       if (payer.toLowerCase() === address.toLowerCase()) {
@@ -192,17 +277,7 @@ export default function DashboardPage() {
       });
       setStatus(`Tx ${hashTx.slice(0, 10)}… confirming`);
       await publicClient.waitForTransactionReceipt({ hash: hashTx });
-      setActivities((prev) => [
-        {
-          id: Date.now(),
-          from: "Demo Payer",
-          amount: "1.50 ETH",
-          invoice: hash.slice(0, 10),
-          date: "Just now",
-          verified: true,
-        },
-        ...prev,
-      ]);
+      /* activity reloads from chain in refresh() */
       setStatus("Payment verified & recorded");
       await refresh();
       setShowSubmit(false);
@@ -287,7 +362,8 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-bg text-[var(--text)]">
       <header className="sticky top-0 z-40 border-b border-border-subtle bg-bg/90 backdrop-blur-md">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6">
-          <Link href="/" className="flex items-center gap-2.5">
+          <Link href="/explorer" className="text-[13px] text-muted hover:text-[var(--text)]">Explorer</Link>
+        <Link href="/" className="flex items-center gap-2.5">
             <Image src="/logo.png" alt="FactorX" width={28} height={28} className="h-7 w-7 object-contain" priority />
             <div className="leading-none">
               <p className="text-[13px] font-semibold tracking-wide">FactorX</p>
@@ -306,22 +382,13 @@ export default function DashboardPage() {
                 <span className="font-mono text-muted">{short}</span>
               </button>
             ) : (
-              <div className="relative z-50 flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => void onDemoConnect()}
-                  className="cursor-pointer rounded-full bg-accent px-3.5 py-1.5 text-[12px] font-semibold text-white hover:bg-accent-dim"
-                >
-                  Demo Connect (Anvil)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void onConnect()}
-                  className="cursor-pointer rounded-full border border-border bg-card px-3 py-1.5 text-[11px] font-medium text-muted hover:text-[var(--text)]"
-                >
-                  MetaMask
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => void onConnect()}
+                className="relative z-50 cursor-pointer rounded-full bg-accent px-3.5 py-1.5 text-[12px] font-semibold text-white hover:bg-accent-dim"
+              >
+                Connect wallet
+              </button>
             )}
           </div>
         </div>

@@ -73,6 +73,23 @@ export const scoreAbi = [
 export const registryAbi = [
   {
     type: "function",
+    name: "getReceivables",
+    stateMutability: "view",
+    inputs: [{ name: "user", type: "address" }],
+    outputs: [{
+      name: "",
+      type: "tuple[]",
+      components: [
+        { name: "payer", type: "address" },
+        { name: "amount", type: "uint256" },
+        { name: "sourceTxHash", type: "bytes32" },
+        { name: "timestamp", type: "uint256" },
+        { name: "eventType", type: "uint8" },
+      ],
+    }],
+  },
+  {
+    type: "function",
     name: "getReceivableCount",
     stateMutability: "view",
     inputs: [{ name: "user", type: "address" }],
@@ -101,6 +118,22 @@ export const creditAbi = [
     stateMutability: "view",
     inputs: [{ name: "user", type: "address" }],
     outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "outstanding",
+    stateMutability: "view",
+    inputs: [{ name: "user", type: "address" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "event",
+    name: "AdvanceOpened",
+    inputs: [
+      { name: "user", type: "address", indexed: true },
+      { name: "amount", type: "uint256", indexed: false },
+      { name: "score", type: "uint256", indexed: false },
+    ],
   },
   {
     type: "function",
