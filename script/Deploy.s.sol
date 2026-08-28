@@ -9,22 +9,32 @@ import "../src/FactorCredit.sol";
 import "../src/MockConsumer.sol";
 import "../src/PassportNFT.sol";
 
+/**
+ * @title DeployFactorX
+ * @notice Deploys full FactorX stack.
+ *
+ * Local:
+ *   forge script script/Deploy.s.sol:DeployFactorX --rpc-url http://127.0.0.1:8545 --broadcast
+ *
+ * Sepolia (pass key on CLI — no env required):
+ *   forge script script/Deploy.s.sol:DeployFactorX \
+ *     --rpc-url https://ethereum-sepolia-rpc.publicnode.com \
+ *     --private-key 0xYOUR_KEY \
+ *     --broadcast -vv
+ */
 contract DeployFactorX is Script {
     function run() external {
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
-        address deployer = vm.addr(deployerPrivateKey);
-
-        console.log("Deployer:", deployer);
+        // Uses --private-key / --account from CLI, or default sender
+        console.log("Deployer:", msg.sender);
         console.log("Chain ID:", block.chainid);
 
-        vm.startBroadcast(deployerPrivateKey);
+        vm.startBroadcast();
 
         ReceivableRegistry registry = new ReceivableRegistry();
         console.log("ReceivableRegistry:", address(registry));
 
         AttestcoinVerifier verifier = new AttestcoinVerifier(address(registry));
         console.log("AttestcoinVerifier:", address(verifier));
-
         registry.setVerifier(address(verifier));
 
         CommercialScore score = new CommercialScore(address(registry));
