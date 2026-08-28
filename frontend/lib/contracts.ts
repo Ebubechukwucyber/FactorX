@@ -2,12 +2,12 @@ import { type Address } from "viem";
 
 /** Creditcoin testnet — passport home (AMA) */
 export const ADDRESSES = {
-  registry: "0x1e578b5aE11BEE48361b70470E8FfD939148b7F7" as Address,
-  verifier: "0x282d281B101C7e9fd66996b12E72BD95E30a6b48" as Address,
-  score: "0xe90195df4183865CF1533F5B90f15AC37EEbdE02" as Address,
-  credit: "0x43B016716D7ED9a208158EF6b007B6133e7745C8" as Address,
-  passport: "0xa1C6E03E9d0aa5610a9098d723BDA6241C2daCC1" as Address,
-  consumer: "0x7458d143Ac7F00356A689AF40994d0255FB8d104" as Address,
+  registry: "0x1e578b5aE11BEE48361b70470E8FfD939148b7F7",
+  verifier: "0x282d281B101C7e9fd66996b12E72BD95E30a6b48",
+  score:    "0xe90195df4183865CF1533F5B90f15AC37EEbdE02",
+  credit:   "0x43B016716D7ED9a208158EF6b007B6133e7745C8",
+  passport: "0xa1C6E03E9d0aa5610a9098d723BDA6241C2daCC1",
+  consumer: "0x7458d143Ac7F00356A689AF40994d0255FB8d104",
 } as const;
 
 export const creditcoinTestnet = {
