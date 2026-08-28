@@ -39,13 +39,6 @@ This repo is the hackathon implementation. Disbursement of cash is **out of scop
 
 Wedge: **digital agencies and service exporters paid on-chain by foreign clients.**
 
-## What it is not
-
-- Not a bank.
-- Not a stablecoin vault.
-- Not Attestcoin writability (headers / committee). Readability only, per AMA.
-- Not USD. All amounts are **wei / ETH** from the source tx.
-
 ---
 
 ## Live testnet
