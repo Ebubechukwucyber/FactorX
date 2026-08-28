@@ -3,11 +3,11 @@ import { type Address } from "viem";
 /** Creditcoin testnet — passport home (AMA) */
 export const ADDRESSES = {
   registry: "0x1e578b5aE11BEE48361b70470E8FfD939148b7F7" as Address,
-  verifier: "0x34C588fFaCC2009a73baa097253CBcF248DE3ED4" as Address,
+  verifier: "0x18CD4A1444933E3FCE147fB2e953ECae23e03AD1" as Address,
   score: "0xe90195df4183865CF1533F5B90f15AC37EEbdE02" as Address,
-  credit: "0x43B016716D7ED9a208158EF6b007B6133e7745C8" as Address,
-  passport: "0xa1C6E03E9d0aa5610a9098d723BDA6241C2daCC1" as Address,
-  consumer: "0x7458d143Ac7F00356A689AF40994d0255FB8d104" as Address,
+  credit:   "0x96e99678067c62c441152E69975438768e3afEAf" as Address,
+  passport: "0xEB1D16bA39D752B5eCABB8D13dA8C8AA364376Ea" as Address,
+  consumer: "0x2A845d32837CB3549f3e14cE160586961c522AEc" as Address,
   intent: "0xB37b771B1337cF555dFAeF8bd7190445D75796aa" as Address,
 } as const;
 

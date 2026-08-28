@@ -1,32 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-/**
- * @title PassportNFT
- * @notice Soulbound (non-transferable) NFT that represents a user's
- *         Commercial Cashflow Passport in FactorX.
- *
- * - One passport per address
- * - Cannot be transferred or approved
- * - Minted the first time a user receives a verified commercial payment
- * - Metadata can later point to score / volume (or stay simple for the hackathon)
- *
- * This gives judges and users a tangible identity object.
- */
-
 contract PassportNFT {
-    // ============ ERC-721 minimal surface ============
     string public name = "FactorX Commercial Passport";
     string public symbol = "FXPASS";
 
     mapping(uint256 => address) private _ownerOf;
-    mapping(address => uint256) private _ownedToken; // one passport per user
+    mapping(address => uint256) private _ownedToken;
     mapping(address => uint256) private _balanceOf;
 
     uint256 private _nextId = 1;
-
-    address public minter; // AttestcoinVerifier or a dedicated minter role
+    address public minter;
     address public owner;
+    string public baseURI;
 
     event Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
     event PassportMinted(address indexed user, uint256 indexed tokenId);
@@ -54,10 +40,10 @@ contract PassportNFT {
         minter = _minter;
     }
 
-    /**
-     * @notice Mint a soulbound passport for a user.
-     *         Called when they receive their first verified commercial payment.
-     */
+    function setBaseURI(string calldata uri) external onlyOwner {
+        baseURI = uri;
+    }
+
     function mint(address to) external onlyMinter returns (uint256) {
         if (to == address(0)) revert ZeroAddress();
         if (_ownedToken[to] != 0) revert AlreadyHasPassport();
@@ -69,11 +55,9 @@ contract PassportNFT {
 
         emit Transfer(address(0), to, id);
         emit PassportMinted(to, id);
-
         return id;
     }
 
-    // ============ Views ============
     function balanceOf(address user) external view returns (uint256) {
         return _balanceOf[user];
     }
@@ -92,7 +76,15 @@ contract PassportNFT {
         return _ownedToken[user] != 0;
     }
 
-    // ============ Soulbound: block all transfers & approvals ============
+    function tokenURI(uint256 tokenId) external view returns (string memory) {
+        require(_ownerOf[tokenId] != address(0), "Nonexistent token");
+        return baseURI;
+    }
+
+    function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
+        return interfaceId == 0x80ac58cd || interfaceId == 0x5b5e139f || interfaceId == 0x01ffc9a7;
+    }
+
     function transferFrom(address, address, uint256) external pure {
         revert Soulbound();
     }

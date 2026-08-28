@@ -17,6 +17,7 @@ import CreditCard from "@/components/CreditCard";
 import ActivityList from "@/components/ActivityList";
 import SubmitProof from "@/components/SubmitProof";
 import StatsRow from "@/components/StatsRow";
+import PassportCard from "@/components/PassportCard";
 import { publicClient, connectWallet, connectDemo, errMsg } from "@/lib/chain";
 import {
   ADDRESSES,
@@ -25,6 +26,7 @@ import {
   creditAbi,
   verifierAbi,
   consumerAbi,
+  passportAbi,
 } from "@/lib/contracts";
 
 type Activity = {
@@ -46,6 +48,10 @@ export default function DashboardPage() {
   const [counterparties, setCounterparties] = useState(0);
   const [availableCredit, setAvailableCredit] = useState(0);
   const [debt, setDebt] = useState(0);
+  const [hasPassport, setHasPassport] = useState(false);
+  const [activityLoading, setActivityLoading] = useState(false);
+  const [termsNote, setTermsNote] = useState("");
+  const [passportId, setPassportId] = useState<number | null>(null);
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const [activities, setActivities] = useState<Activity[]>([]);
@@ -54,6 +60,7 @@ export default function DashboardPage() {
 
   const refresh = useCallback(async () => {
     if (!address) return;
+    setActivityLoading(true);
     try {
       const [s, count, vol, unique, avail, recs, debtAmt] = await Promise.all([
         publicClient.readContract({
@@ -105,6 +112,27 @@ export default function DashboardPage() {
       setCounterparties(Number(unique));
       setAvailableCredit(Number(formatEther(avail as bigint)));
       setDebt(Number(formatEther(debtAmt as bigint)));
+      try {
+        const [owned, token] = await Promise.all([
+          publicClient.readContract({
+            address: ADDRESSES.passport,
+            abi: passportAbi,
+            functionName: "hasPassport",
+            args: [address],
+          }),
+          publicClient.readContract({
+            address: ADDRESSES.passport,
+            abi: passportAbi,
+            functionName: "tokenOf",
+            args: [address],
+          }),
+        ]);
+        setHasPassport(Boolean(owned));
+        setPassportId(Number(token) || null);
+      } catch {
+        setHasPassport(false);
+        setPassportId(null);
+      }
       const raw = (Array.isArray(recs) ? recs : []) as unknown[];
       const list = raw.map((row) => {
         const r = row as Record<string, unknown> | unknown[];
@@ -148,32 +176,12 @@ export default function DashboardPage() {
           verified: true,
         });
       }
-      try {
-        const logs = await publicClient.getContractEvents({
-          address: ADDRESSES.credit,
-          abi: creditAbi,
-          eventName: "AdvanceOpened",
-          args: { user: address },
-          fromBlock: BigInt(5_300_000),
-        });
-        for (const [i, lg] of logs.entries()) {
-          const amt = (lg.args as { amount?: bigint }).amount || BigInt(0);
-          advances.push({
-            id: 10_000_000 + i,
-            from: "Advance opened",
-            amount: `${Number(formatEther(amt)).toFixed(4)} ETH`,
-            invoice: lg.transactionHash.slice(0, 10),
-            date: "Creditcoin",
-            verified: true,
-          });
-        }
-      } catch (err) {
-        console.warn("advance logs", err);
-      }
       setActivities([...advances, ...pays]);
     } catch (e) {
       console.error(e);
       setStatus(e instanceof Error ? e.message : "Contract read failed");
+    } finally {
+      setActivityLoading(false);
     }
   }, [address]);
 
@@ -283,15 +291,29 @@ export default function DashboardPage() {
         account: address,
         chain: undefined,
       });
-      setStatus(`Tx ${hashTx.slice(0, 10)}… confirming`);
-      await publicClient.waitForTransactionReceipt({ hash: hashTx });
-      /* activity reloads from chain in refresh() */
+      const receipt = await publicClient.waitForTransactionReceipt({
+        hash: hashTx,
+        pollingInterval: 1_200,
+        timeout: 60_000,
+      });
+      if (receipt.status !== "success") {
+        setStatus("This Sepolia hash was already recorded. Paste a new payment hash.");
+        return;
+      }
       setStatus("Payment verified & recorded");
-      await refresh();
+      void refresh();
+      await new Promise((r) => setTimeout(r, 900));
+      setShowSubmit(false);
+      setStatus("");
       setShowSubmit(false);
     } catch (e: unknown) {
       console.error(e);
-      setStatus(errMsg(e));
+      const blob = `${errMsg(e)} ${JSON.stringify(e)}`.toLowerCase();
+      if (blob.includes("proofalreadyused") || blob.includes("already used") || blob.includes("processedproofs")) {
+        setStatus("This Sepolia hash was already recorded. Paste a new payment hash.");
+      } else {
+        setStatus("");
+      }
     } finally {
       setLoading(false);
     }
@@ -309,7 +331,11 @@ export default function DashboardPage() {
         address: ADDRESSES.credit,
         abi: creditAbi,
         functionName: "requestAdvance",
-        args: [parseEther("1")],
+        args: [
+          availableCredit > 0
+            ? parseEther(availableCredit.toFixed(8))
+            : parseEther("0"),
+        ],
         account: address,
         chain: undefined,
       });
@@ -340,22 +366,38 @@ export default function DashboardPage() {
         chain: undefined,
       });
       await publicClient.waitForTransactionReceipt({ hash: hashTx });
-      const scoreNow = await publicClient.readContract({
-        address: ADDRESSES.score,
-        abi: scoreAbi,
-        functionName: "getCommercialScore",
-        args: [address],
-      });
+      const [scoreNow, debtNow, availNow] = await Promise.all([
+        publicClient.readContract({
+          address: ADDRESSES.score,
+          abi: scoreAbi,
+          functionName: "getCommercialScore",
+          args: [address],
+        }),
+        publicClient.readContract({
+          address: ADDRESSES.credit,
+          abi: creditAbi,
+          functionName: "outstanding",
+          args: [address],
+        }),
+        publicClient.readContract({
+          address: ADDRESSES.credit,
+          abi: creditAbi,
+          functionName: "getAvailableCredit",
+          args: [address],
+        }),
+      ]);
       const s = Number(scoreNow);
-      setStatus(
-        s >= 700
-          ? "Premium terms unlocked: 0% collateral, priority queue"
-          : s >= 500
-            ? "Improved terms: 20% lower collateral"
-            : s >= 400
-              ? "Standard terms available"
-              : "Score too low for improved terms"
-      );
+      const debtEth = Number(formatEther(debtNow as bigint));
+      const availEth = Number(formatEther(availNow as bigint));
+      let msg = "Score too low for terms";
+      if (s < 400) msg = "Score too low for terms";
+      else if (debtEth > 0 && availEth === 0) msg = "Line fully drawn. No new offer until repay";
+      else if (debtEth > 0) msg = "Existing advance on file. Offer sized to remaining room";
+      else if (s >= 700) msg = "Premium terms: 0% collateral, priority queue";
+      else if (s >= 500) msg = "Improved terms: 20% lower collateral";
+      else msg = "Standard terms available";
+      setStatus(msg);
+      setTermsNote(msg);
     } catch (e: unknown) {
       console.error(e);
       setStatus(errMsg(e));
@@ -370,7 +412,6 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-bg text-[var(--text)]">
       <header className="sticky top-0 z-40 border-b border-border-subtle bg-bg/90 backdrop-blur-md">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6">
-          <Link href="/explorer" className="text-[13px] text-muted hover:text-[var(--text)]">Explorer</Link>
         <Link href="/" className="flex items-center gap-2.5">
             <Image src="/logo.png" alt="FactorX" width={28} height={28} className="h-7 w-7 object-contain" priority />
             <div className="leading-none">
@@ -379,6 +420,9 @@ export default function DashboardPage() {
             </div>
           </Link>
           <div className="flex items-center gap-2.5">
+            <Link href="/explorer" className="rounded-full bg-accent px-3.5 py-1.5 text-[12px] font-semibold text-white hover:bg-accent-dim">
+              Explorer
+            </Link>
             <ThemeToggle />
             {isConnected ? (
               <button
@@ -417,18 +461,6 @@ export default function DashboardPage() {
           </button>
         </div>
 
-        {status && (
-          <div className="mb-4 rounded-xl border border-border bg-card px-4 py-2 text-[13px] text-muted">
-            {status}
-          </div>
-        )}
-
-        {!isConnected && (
-          <div className="mb-6 rounded-xl border border-accent/30 bg-[var(--accent-soft)] px-4 py-3 text-[13px]">
-            Connect MetaMask on Creditcoin Testnet (chain 102031). Use the deployer wallet — it needs tCTC.
-          </div>
-        )}
-
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
           <div className="lg:col-span-3">
             <CreditCard available={availableCredit} onRequest={onRequestAdvance} />
@@ -443,6 +475,7 @@ export default function DashboardPage() {
           </div>
           <div className="lg:col-span-4">
             <ActivityList
+              loading={isConnected && activityLoading && activities.length === 0}
               items={
                 activities.length
                   ? activities
@@ -461,23 +494,61 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="mt-8 flex flex-col gap-3 rounded-2xl border border-border bg-card p-5 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-[13px] font-medium">Other protocols can read this passport</p>
-            <p className="mt-0.5 text-[12px] text-muted">MockConsumer reads your on-chain score</p>
+        <div className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4">
+            <img
+              src="/passport-nft.jpg"
+              alt="FXPASS"
+              className="h-24 w-24 shrink-0 rounded-xl object-cover"
+            />
+            <div className="min-w-0">
+              <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
+                Soulbound passport
+              </p>
+              <p className="mt-1 text-lg font-semibold">
+                {hasPassport && passportId ? `FXPASS #${passportId}` : "Not minted"}
+              </p>
+              <p className="mt-0.5 text-[12px] text-muted">Non-transferable commercial identity</p>
+              {hasPassport && passportId ? (
+                <a
+                  className="mt-2 inline-block text-[12px] text-accent hover:underline"
+                  href={`https://creditcoin-testnet.blockscout.com/token/0xEB1D16bA39D752B5eCABB8D13dA8C8AA364376Ea/instance/${passportId}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  View on Blockscout
+                </a>
+              ) : null}
+            </div>
           </div>
-          <button
-            onClick={onCheckTerms}
-            disabled={!isConnected || loading}
-            className="shrink-0 rounded-xl bg-accent px-4 py-2.5 text-[13px] font-semibold text-white disabled:opacity-50"
-          >
-            Check Better Terms
-          </button>
+          <div className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-card p-4">
+            <div>
+              <p className="text-[11px] font-medium uppercase tracking-wider text-muted">Terms</p>
+              <p className="mt-1 text-[13px] text-muted">Score-based offer from MockConsumer</p>
+            </div>
+            <div className="text-right">
+              <button
+                onClick={onCheckTerms}
+                disabled={!isConnected || loading}
+                className="shrink-0 rounded-xl bg-accent px-3.5 py-2 text-[12px] font-semibold text-white disabled:opacity-50"
+              >
+                Check terms
+              </button>
+              {termsNote ? (
+                <p className="mt-2 max-w-[220px] text-[11px] leading-snug text-muted">{termsNote}</p>
+              ) : null}
+            </div>
+          </div>
         </div>
       </main>
 
       {showSubmit && (
-        <SubmitProof onClose={() => setShowSubmit(false)} onSubmit={onSubmitProof} loading={loading} />
+        <SubmitProof
+          onClose={() => setShowSubmit(false)}
+          onSubmit={onSubmitProof}
+          loading={loading}
+          status={status}
+        />
       )}
     </div>
   );

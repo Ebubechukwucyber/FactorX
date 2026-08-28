@@ -46,8 +46,10 @@ contract FactorCredit {
 
         uint256 volume = registry.totalVolume(msg.sender);
         uint256 maxAdvance = (volume * MAX_ADVANCE_BPS) / 10_000;
+        uint256 debt = outstanding[msg.sender];
+        uint256 available = maxAdvance > debt ? maxAdvance - debt : 0;
 
-        uint256 amount = requested > maxAdvance ? maxAdvance : requested;
+        uint256 amount = requested > available ? available : requested;
         if (amount == 0) revert ExceedsLimit();
 
         outstanding[msg.sender] += amount;

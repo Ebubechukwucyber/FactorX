@@ -19,7 +19,7 @@ export default function CreditCard({ available, onRequest }: Props) {
       </div>
 
       <p className="tabular text-[28px] font-bold tracking-tight text-[var(--text)]">
-        ${available.toLocaleString()}
+        {available.toFixed(4)} ETH
       </p>
       <p className="mt-1.5 text-[12px] leading-relaxed text-muted">
         Based on verified commercial cashflow.
