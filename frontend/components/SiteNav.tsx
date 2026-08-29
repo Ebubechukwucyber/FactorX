@@ -44,7 +44,7 @@ export default function SiteNav({
 
         <nav className="hidden items-center gap-5 md:flex">
           <Link href="/docs" onClick={() => setNav(true)} className="text-[13px] text-muted hover:text-[var(--text)]">Docs</Link>
-          <a href="/FactorX-Protocol-Brief.pdf" className="text-[13px] text-muted hover:text-[var(--text)]">Brief</a>
+          <a href="/FactorX-Protocol-Deck.pdf" className="text-[13px] text-muted hover:text-[var(--text)]">Deck</a>
           <Link href="/explorer" onClick={() => setNav(true)} className="text-[13px] text-muted hover:text-[var(--text)]">Explorer</Link>
         </nav>
 
@@ -75,7 +75,7 @@ export default function SiteNav({
       {open && (
         <div className="border-t border-border bg-card px-4 py-3 md:hidden">
           <Link href="/docs" className="block py-2.5 text-[14px]" onClick={() => setNav(true)}>Documentation</Link>
-          <a href="/FactorX-Protocol-Brief.pdf" className="block py-2.5 text-[14px]">Protocol brief</a>
+          <a href="/FactorX-Protocol-Deck.pdf" className="block py-2.5 text-[14px]">Protocol deck</a>
           <Link href="/explorer" className="block py-2.5 text-[14px]" onClick={() => setNav(true)}>Explorer</Link>
           <Link href="/dashboard" className="block py-2.5 text-[14px]" onClick={() => setNav(true)}>Dashboard</Link>
           <div className="pt-2 sm:hidden">{right}</div>

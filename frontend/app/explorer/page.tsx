@@ -44,7 +44,35 @@ export default function ExplorerPage() {
 
   return (
     <main className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
-      <SiteNav compact />
+      <SiteNav
+        compact
+        right={
+          address ? (
+            <button
+              type="button"
+              onClick={() => setAddress(null)}
+              className="rounded-full border border-border bg-card px-3 py-1.5 font-mono text-[11px] text-muted"
+            >
+              {address.slice(0, 6)}…{address.slice(-4)}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  const { address: a } = await connectWallet();
+                  setAddress(a);
+                } catch (e) {
+                  setStatus(errMsg(e));
+                }
+              }}
+              className="rounded-full bg-accent px-3.5 py-1.5 text-[12px] font-semibold text-white"
+            >
+              Connect
+            </button>
+          )
+        }
+      />
 
       <section className="mx-auto max-w-3xl px-6 py-10">
         <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.2em] text-accent">
