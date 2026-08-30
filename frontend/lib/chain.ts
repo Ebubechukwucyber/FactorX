@@ -78,6 +78,12 @@ export async function connectWallet(): Promise<{
 
   let accounts: string[];
   try {
+    // Forces MetaMask's account picker instead of silently
+    // reusing the last connected address.
+    await ethereum.request({
+      method: "wallet_requestPermissions",
+      params: [{ eth_accounts: {} }],
+    });
     accounts = (await ethereum.request({
       method: "eth_requestAccounts",
     })) as string[];
