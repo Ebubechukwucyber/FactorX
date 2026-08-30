@@ -5,13 +5,12 @@ frontend/out/
 out/
 cache/
 broadcast/
-lib/
 .env
 .env.*
 .DS_Store
 Thumbs.db
 *.log
-
+/lib/
 frontend/node_modules/
 frontend/.next/
 node_modules/
