@@ -39,8 +39,6 @@
 | Attestcoin docs | https://docs.attestcoin.org/ |
 | Creditcoin testnet RPC | https://rpc.cc3-testnet.creditcoin.network |
 
-If a deck URL 404s, the file in `frontend/public/` may be named `FactorX-Investor-Deck.pdf` — use that host path instead.
-
 ---
 
 ## What this is
