@@ -141,10 +141,6 @@ Receivables, score, passport, and outstanding live on Creditcoin and are readabl
 | Attestcoin height wait + Proof Builder + `verifySingle` | Real on this testnet |
 | `verifyAndRecord`, score, soulbound mint, replay / self-pay | Real |
 | MockConsumer `BetterTermsOffered` | Real |
-| Same-transaction BlockProver `verifyAndEmit` in Solidity | Not shipped — selector mismatch |
-| Token / stablecoin disbursement | Not shipped |
-| USD amounts | Not shipped — values are 18-decimal source units |
-| Invoice-amount matching / KYC | Not shipped |
 | Attestcoin writability | Out of scope |
 | Mainnet | Not shipped |
 | Multi-member team | Solo |
