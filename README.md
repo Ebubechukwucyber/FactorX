@@ -1,152 +1,175 @@
-<p align="center">
-  <img src="frontend/public/logo.png" alt="FactorX" width="72" height="72" />
-</p>
+# FactorX
 
-<h1 align="center">FactorX</h1>
+**FactorX turns an attested source-chain payment into a soulbound commercial file on Creditcoin that a lender contract can read.**
 
-<p align="center">
-  <strong>Commercial Cashflow Passport</strong><br />
-  Attested payments in. Portable credit identity out.
-</p>
+A studio or exporter already gets paid on-chain. Banks still see a blank record. I built the file in between: Attestcoin proves the settlement, Creditcoin stores the receivable / score / passport, and a separate consumer emits terms — including a refusal when the line is already drawn.
 
-<p align="center">
-  <a href="https://factorx.vercel.app">App</a>
-  ·
-  <a href="https://youtu.be/y9v2vgB_cDg">Demo video</a>
-  ·
-  <a href="https://factorx.vercel.app/docs">Docs</a>
-  ·
-  <a href="https://factorx.vercel.app/FactorX-Protocol-Deck.pdf">Deck</a>
-  ·
-  <a href="https://github.com/Ebubechukwucyber/FactorX">Repo</a>
-</p>
+Live on Creditcoin testnet `102031`. App: [factorx.vercel.app](https://factorx.vercel.app) · Video: [youtu.be/y9v2vgB_cDg](https://youtu.be/y9v2vgB_cDg) · Docs: [factorx.vercel.app/docs](https://factorx.vercel.app/docs)
 
----
+**[Judge it in 60 seconds](#judge-it-in-60-seconds)** · **[The core flow](#the-core-flow)** · **[Honesty](#honesty-what-is-real)** · **[Run locally](#run-it-locally)**
 
-## Links
+## Table of contents
 
-| | |
-|---|---|
-| Live app | https://factorx.vercel.app |
-| Dashboard | https://factorx.vercel.app/dashboard |
-| Attestation explorer | https://factorx.vercel.app/explorer |
-| Technical docs | https://factorx.vercel.app/docs |
-| Protocol deck | https://factorx.vercel.app/FactorX-Protocol-Deck.pdf |
-| Demo video | https://youtu.be/y9v2vgB_cDg |
-| GitHub | https://github.com/Ebubechukwucyber/FactorX |
-| Creditcoin explorer | https://creditcoin-testnet.blockscout.com |
-| Attestcoin dashboard (ASC) | https://dashboard.cc3-testnet.creditcoin.network |
-| Attestcoin docs | https://docs.attestcoin.org/ |
-| Creditcoin testnet RPC | https://rpc.cc3-testnet.creditcoin.network |
+- [The problem I set out to solve](#the-problem-i-set-out-to-solve)
+- [What I built](#what-i-built)
+- [Judge it in 60 seconds](#judge-it-in-60-seconds)
+- [The core flow](#the-core-flow)
+- [Architecture](#architecture)
+- [Who holds the money / data](#who-holds-the-money--data)
+- [Engineering decisions](#engineering-decisions)
+- [Honesty: what is real](#honesty-what-is-real)
+- [Tech stack](#tech-stack)
+- [Project layout](#project-layout)
+- [Run it locally](#run-it-locally)
+- [License](#license)
 
----
+## The problem I set out to solve
 
-## What this is
+On-chain invoices exist. The credit file does not.
 
-FactorX turns a **verified source-chain payment** into a **soulbound commercial identity on Creditcoin**.
+Amaka’s studio is paid from a foreign client wallet. The receipt is public. A bank still asks for six months of statements she does not have. A DeFi score watches her bags, not her counterparties.
 
-Banks do not underwrite a studio that gets paid on-chain. The trail exists; the credit file does not. FactorX is that file:
+I refused to build “another on-chain FICO that increments when any wallet sends you dust.”
 
-1. Attestcoin proves the source-chain settlement (readability only).
-2. Creditcoin stores the receivable, the score, the invoice intent, and the passport.
-3. A separate lender contract reads those values and issues terms — including whether an advance is already drawn.
+## What I built
 
-`requestAdvance` books a line equal to 30% of attested volume minus outstanding. It does **not** transfer tokens. A production vault would disburse after the same reads.
+1. **Submit** a source-chain payment hash (optional invoice id).
+2. **Wait** until Attestcoin attested height covers that block, then prove inclusion (`verifySingle`).
+3. **Record** the receivable on Creditcoin (`verifyAndRecord`). First success mints a soulbound FXPASS.
+4. **Book** a line: 30% of attested volume minus outstanding. No tokens move.
+5. **Read** as a lender: MockConsumer pulls score, outstanding, available and emits `BetterTermsOffered` — or refuses if the line is full.
 
-## Who it is for
+User is the merchant wallet. Auth is MetaMask on Creditcoin testnet `102031`. The lender is a separate contract, not a FactorX login.
 
-| Role | Job |
-|------|-----|
-| SME / studio / exporter | Prove inbound commercial payments without a bank PDF |
-| Lender / fintech | Read score, volume, counterparties, outstanding, available |
-| Judge | Follow source tx → Attestcoin → Creditcoin explorer |
+## Judge it in 60 seconds
 
-Wedge: digital agencies and exporters paid on-chain by foreign clients.
+1. Open [factorx.vercel.app](https://factorx.vercel.app). MetaMask → Creditcoin Testnet `102031`.
+2. Dashboard → Connect → Submit Proof. Paste a source payment from a **different** wallet (self-pay reverts).
+3. Watch the stepper: source receipt → attested height → inclusion proof → sign `verifyAndRecord`.
+4. Open [Explorer](https://factorx.vercel.app/explorer). Follow source hash → Attestcoin → Creditcoin.
+5. Confirm FXPASS on the dashboard / Blockscout.
+6. Request Advance once. A second click at 0 available should fail.
+7. Check terms. On Blockscout, read `BetterTermsOffered` on [MockConsumer](https://creditcoin-testnet.blockscout.com/address/0x2A845d32837CB3549f3e14cE160586961c522AEc).
 
-## What it is not
+Video of that path: [youtu.be/y9v2vgB_cDg](https://youtu.be/y9v2vgB_cDg).
 
-- Not a bank.
-- Not a stablecoin vault.
-- Not Attestcoin writability. Readability only, per AMA.
-- Not USD. Amounts are native 18-decimal units from the source transaction.
+This demo’s origin chain is Attestcoin `chainKey = 1` (Ethereum Sepolia). You only need that name when creating a test payment.
 
----
-
-## Live network
-
-| Item | Value |
-|------|--------|
-| Execution chain | Creditcoin Testnet |
-| Chain ID | `102031` (`0x18e8f`) |
-| RPC | `https://rpc.cc3-testnet.creditcoin.network` |
-| Block explorer | https://creditcoin-testnet.blockscout.com |
-| Attestcoin | readability, source `chainKey = 1` |
-
-### Contracts
-
-| Contract | Address |
-|----------|---------|
-| ReceivableRegistry | [`0x1e578b5aE11BEE48361b70470E8FfD939148b7F7`](https://creditcoin-testnet.blockscout.com/address/0x1e578b5aE11BEE48361b70470E8FfD939148b7F7) |
-| AttestcoinVerifier | [`0x18CD4A1444933E3FCE147fB2e953ECae23e03AD1`](https://creditcoin-testnet.blockscout.com/address/0x18CD4A1444933E3FCE147fB2e953ECae23e03AD1) |
-| CommercialScore | [`0xe90195df4183865CF1533F5B90f15AC37EEbdE02`](https://creditcoin-testnet.blockscout.com/address/0xe90195df4183865CF1533F5B90f15AC37EEbdE02) |
-| FactorCredit | [`0x96e99678067c62c441152E69975438768e3afEAf`](https://creditcoin-testnet.blockscout.com/address/0x96e99678067c62c441152E69975438768e3afEAf) |
-| PassportNFT | [`0xEB1D16bA39D752B5eCABB8D13dA8C8AA364376Ea`](https://creditcoin-testnet.blockscout.com/address/0xEB1D16bA39D752B5eCABB8D13dA8C8AA364376Ea) |
-| CommercialIntent | [`0xB37b771B1337cF555dFAeF8bd7190445D75796aa`](https://creditcoin-testnet.blockscout.com/address/0xB37b771B1337cF555dFAeF8bd7190445D75796aa) |
-| MockConsumer | [`0x2A845d32837CB3549f3e14cE160586961c522AEc`](https://creditcoin-testnet.blockscout.com/address/0x2A845d32837CB3549f3e14cE160586961c522AEc) |
-
----
-
-## Architecture
+## The core flow
 
 ```text
-Source-chain payment
+counterparty pays merchant on source chain
+        │
+        ▼
+Attestcoin attests the block (lags tip)
         │
         ▼
 Proof Builder + USC SDK verifySingle
         │
         ▼
-FactorX.verifyAndRecord          Creditcoin 102031
+verifyAndRecord on Creditcoin 102031
         ├── ReceivableRegistry
-        ├── CommercialIntent     invoice id, confidence 1|2
+        ├── CommercialIntent     confidence 1 | 2
         ├── CommercialScore      view
-        ├── PassportNFT          soulbound, first success
-        └── FactorCredit         cap = 30% volume − outstanding
+        ├── PassportNFT          soulbound, once
+        └── FactorCredit         cap = 30% volume − debt
                 │
                 ▼
-        MockConsumer             score + debt + available → terms
+        MockConsumer.checkAndOfferTerms
 ```
 
-Replay of the same source hash reverts. Self-pay (`payer == beneficiary`) reverts.
+Rules:
 
-### Score
+- `payer == beneficiary` → `SelfTransfer`
+- same source hash twice → `ProofAlreadyUsed`
+- score starts at 300, cap 950; credit needs ≥ 400
+- available = `volume * 30% − outstanding`
+- MockConsumer is not FactorX. If available is 0 it posts a refusal.
+
+## Architecture
 
 ```text
-base 300
-+ 25 per verified payment
-+ 15 per unique payer
-+ volume / 1e18
-+ recency (50 if < 30d, 20 if < 90d)
-capped at 950
+Browser (Next.js) ── GET /api/attestcoin/proof ── Proof Builder + origin RPC
+        │
+        ├── MetaMask / Creditcoin RPC 102031
+        └── USC SDK verifySingle
+                    │
+                    ▼
+         Creditcoin contracts (testnet)
 ```
 
-Credit requires score ≥ 400.
+Hosted: Vercel app + the proof API route.  
+On-chain: seven contracts on Creditcoin testnet.  
+Local: Foundry tests, `npm run dev`.
 
----
+| Contract | Address |
+|----------|---------|
+| ReceivableRegistry | [`0x1e578b5a…8b7F7`](https://creditcoin-testnet.blockscout.com/address/0x1e578b5aE11BEE48361b70470E8FfD939148b7F7) |
+| AttestcoinVerifier | [`0x18CD4A14…23e03AD1`](https://creditcoin-testnet.blockscout.com/address/0x18CD4A1444933E3FCE147fB2e953ECae23e03AD1) |
+| CommercialScore | [`0xe90195df…EEbdE02`](https://creditcoin-testnet.blockscout.com/address/0xe90195df4183865CF1533F5B90f15AC37EEbdE02) |
+| FactorCredit | [`0x96e99678…3afEAf`](https://creditcoin-testnet.blockscout.com/address/0x96e99678067c62c441152E69975438768e3afEAf) |
+| PassportNFT | [`0xEB1D16bA…4376Ea`](https://creditcoin-testnet.blockscout.com/address/0xEB1D16bA39D752B5eCABB8D13dA8C8AA364376Ea) |
+| CommercialIntent | [`0xB37b771B…75796aa`](https://creditcoin-testnet.blockscout.com/address/0xB37b771B1337cF555dFAeF8bd7190445D75796aa) |
+| MockConsumer | [`0x2A845d32…22AEc`](https://creditcoin-testnet.blockscout.com/address/0x2A845d32837CB3549f3e14cE160586961c522AEc) |
 
-## Repo
+## Who holds the money / data
+
+FactorX never holds keys or funds. `requestAdvance` writes a number. It does not transfer ETH, tCTC, or a stablecoin.
+
+Receivables, score, passport, and outstanding live on Creditcoin and are readable by anyone who can call the contracts. Invoice id is a `bytes32` hash of a string the merchant typed — not a verified accounting invoice.
+
+## Engineering decisions
+
+**Readability only.** Writability is out of season scope. I did not fake a source-chain message.
+
+**SDK then record, not a fake precompile success.** Same-tx Solidity `verifyAndEmit` on `0x0FD2` did not match this testnet’s public selector. I kept `@gluwa/usc-sdk` `verifySingle` and bound the Creditcoin row to the source hash with replay protection.
+
+**Self-pay and replay are protocol errors.** A screenshot farm should fail on-chain, not in CSS.
+
+**Lender is a second contract.** MockConsumer has no admin key into FactorX. That is the composability demo.
+
+**Line, not vault.** Shipping a toy token transfer would look like cash and lie about it.
+
+**Invoice confidence is a flag.** `1` = payment only, `2` = invoice string present. Not amount-matched factoring.
+
+## Honesty: what is real
+
+| Piece | Status |
+|-------|--------|
+| Live app + dashboard + explorer + docs | Real — [factorx.vercel.app](https://factorx.vercel.app) |
+| Contracts on Creditcoin testnet 102031 | Real — addresses above |
+| Attestcoin height wait + Proof Builder + `verifySingle` | Real on this testnet |
+| `verifyAndRecord`, score, soulbound mint, replay / self-pay | Real |
+| MockConsumer `BetterTermsOffered` | Real |
+| Same-transaction BlockProver `verifyAndEmit` in Solidity | Not shipped — selector mismatch |
+| Token / stablecoin disbursement | Not shipped |
+| USD amounts | Not shipped — values are 18-decimal source units |
+| Invoice-amount matching / KYC | Not shipped |
+| Attestcoin writability | Out of scope |
+| Mainnet | Not shipped |
+| Multi-member team | Solo |
+
+## Tech stack
+
+- Solidity 0.8.24, Foundry, EVM london, `via_ir` for the verifier
+- Next.js 14, viem, Tailwind
+- `@gluwa/usc-sdk@0.18.0`
+- Creditcoin testnet RPC + Blockscout + ASC dashboard
+
+## Project layout
 
 ```text
-src/                 Solidity (Foundry, solc 0.8.24, evm london, via_ir)
-script/              Deploy.s.sol
-test/
-frontend/            Next.js 14 + viem + Tailwind
-docs/
-fxpass-1.json
+src/                 contracts
+test/                FactorX.t.sol, PassportNFT.t.sol
+script/              Anvil deploy
+frontend/app/        landing, dashboard, explorer, docs, proof API
+frontend/lib/        chain.ts, contracts.ts
+docs/                Attestcoin notes
 ```
 
----
+Open first: `README.md`, `frontend/app/docs/page.tsx`, `src/AttestcoinVerifier.sol`, `src/MockConsumer.sol`.
 
-## Run locally
+## Run it locally
 
 ```bash
 cd frontend
@@ -154,46 +177,24 @@ npm install
 npm run dev
 ```
 
-MetaMask on Creditcoin Testnet **102031**.
+http://localhost:3000 — MetaMask on `102031`, RPC `https://rpc.cc3-testnet.creditcoin.network`.
 
 ```bash
 forge test -vv
 ```
 
-Creditcoin broadcasts: `--legacy` and `FOUNDRY_EVM_VERSION=london`.
+Creditcoin broadcasts need `--legacy` and `FOUNDRY_EVM_VERSION=london`. RPC may log a missing `mixHash`; the tx can still land.
 
-### Lender reads
+Lender reads without the UI:
 
 ```bash
 RPC=https://rpc.cc3-testnet.creditcoin.network
-ME=0xYourMerchantWallet
+ME=0xYourMerchantWallet   # 40 hex, not a tx hash
 
 cast call 0xe90195df4183865CF1533F5B90f15AC37EEbdE02 "getCommercialScore(address)(uint256)" $ME --rpc-url $RPC
 cast call 0x96e99678067c62c441152E69975438768e3afEAf "outstanding(address)(uint256)" $ME --rpc-url $RPC
-cast call 0x96e99678067c62c441152E69975438768e3afEAf "getAvailableCredit(address)(uint256)" $ME --rpc-url $RPC
 cast call 0x2A845d32837CB3549f3e14cE160586961c522AEc "checkAndOfferTerms(address)(string)" $ME --rpc-url $RPC
-cast call 0xEB1D16bA39D752B5eCABB8D13dA8C8AA364376Ea "hasPassport(address)(bool)" $ME --rpc-url $RPC
 ```
-
-`$ME` is `0x` + 40 hex.
-
----
-
-## Running the live demo
-
-This deployment watches **Attestcoin `chainKey = 1`** (Ethereum Sepolia) as the source of payments. You only need that name when creating a test payment or reading the origin explorer.
-
-1. From a **different** origin wallet, send a payment to the merchant on that source testnet.
-2. Wait until ASC attested height ≥ that block (`chainKey 1`).
-3. https://factorx.vercel.app/dashboard → Submit proof → confirm `verifyAndRecord`.
-4. `/explorer` — source hash, Attestcoin, Creditcoin.
-5. Passport card — `FXPASS #n`.
-6. Request Advance — books 30% of volume; second click fails at 0 available.
-7. Check terms — `BetterTermsOffered` on Blockscout.
-
-Duplicate source hashes are rejected.
-
----
 
 ## License
 
