@@ -133,6 +133,19 @@ Receivables, score, passport, and outstanding live on Creditcoin and are readabl
 
 **Invoice confidence is a flag.** `1` = payment only, `2` = invoice string present. Not amount-matched factoring.
 
+## **How a Lender Integrates**
+
+The lender **does not need a FactorX account**.
+
+FactorX plugs directly into existing underwriting infrastructure:
+
+```solidity
+passport.hasPassport(sme)
+score.getCommercialScore(sme)
+credit.outstanding(sme)
+credit.getAvailableCredit(sme)
+consumer.checkAndOfferTerms(sme)
+
 ## Honesty: what is real
 
 | Piece | Status |
