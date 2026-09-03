@@ -1,3 +1,4 @@
+
 # FactorX
 
 **FactorX turns an attested source-chain payment into a soulbound commercial file on Creditcoin that a lender contract can read.**
@@ -27,7 +28,7 @@ Live on Creditcoin testnet `102031`. App: [factorx.vercel.app](https://factorx.v
 
 On-chain invoices exist. The credit file does not.
 
-Amaka’s studio is paid from a foreign client wallet. The receipt is public. A bank still asks for six months of statements she does not have. A DeFi score watches her bags, not her counterparties.
+George’s studio is paid from a foreign client wallet. The receipt is public. A bank still asks for six months of statements he does not have. A DeFi score watches his bags, not his counterparties.
 
 I refused to build “another on-chain FICO that increments when any wallet sends you dust.”
 
@@ -37,7 +38,7 @@ I refused to build “another on-chain FICO that increments when any wallet send
 2. **Wait** until Attestcoin attested height covers that block, then prove inclusion (`verifySingle`).
 3. **Record** the receivable on Creditcoin (`verifyAndRecord`). First success mints a soulbound FXPASS.
 4. **Book** a line: 30% of attested volume minus outstanding. No tokens move.
-5. **Read** as a lender: MockConsumer pulls score, outstanding, available and emits `BetterTermsOffered` — or refuses if the line is full.
+5. **Read** as a lender: MockConsumer (external lender) pulls score, outstanding, available and emits `BetterTermsOffered` — or refuses if the line is full.
 
 User is the merchant wallet. Auth is MetaMask on Creditcoin testnet `102031`. The lender is a separate contract, not a FactorX login.
 
