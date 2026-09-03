@@ -18,6 +18,7 @@ Live on Creditcoin testnet `102031`. App: [factorx.vercel.app](https://factorx.v
 - [Architecture](#architecture)
 - [Who holds the money / data](#who-holds-the-money--data)
 - [Engineering decisions](#engineering-decisions)
+- [How a lender integrates](#how-a-lender-integrates)
 - [Honesty: what is real](#honesty-what-is-real)
 - [Tech stack](#tech-stack)
 - [Project layout](#project-layout)
@@ -145,7 +146,7 @@ score.getCommercialScore(sme)
 credit.outstanding(sme)
 credit.getAvailableCredit(sme)
 consumer.checkAndOfferTerms(sme)
-
+```
 ## Honesty: what is real
 
 | Piece | Status |
