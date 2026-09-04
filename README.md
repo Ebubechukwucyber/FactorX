@@ -1,4 +1,3 @@
-
 # FactorX
 
 **FactorX turns an attested source-chain payment into a soulbound commercial file on Creditcoin that a lender contract can read.**
@@ -18,7 +17,6 @@ Live on Creditcoin testnet `102031`. App: [factorx.vercel.app](https://factorx.v
 - [Architecture](#architecture)
 - [Who holds the money / data](#who-holds-the-money--data)
 - [Engineering decisions](#engineering-decisions)
-- [How a lender integrates](#how-a-lender-integrates)
 - [Honesty: what is real](#honesty-what-is-real)
 - [Tech stack](#tech-stack)
 - [Project layout](#project-layout)
@@ -39,7 +37,7 @@ I refused to build “another on-chain FICO that increments when any wallet send
 2. **Wait** until Attestcoin attested height covers that block, then prove inclusion (`verifySingle`).
 3. **Record** the receivable on Creditcoin (`verifyAndRecord`). First success mints a soulbound FXPASS.
 4. **Book** a line: 30% of attested volume minus outstanding. No tokens move.
-5. **Read** as a lender: MockConsumer (external lender) pulls score, outstanding, available and emits `BetterTermsOffered` — or refuses if the line is full.
+5. **Read** as a lender: MockConsumer pulls score, outstanding, available and emits `BetterTermsOffered` — or refuses if the line is full.
 
 User is the merchant wallet. Auth is MetaMask on Creditcoin testnet `102031`. The lender is a separate contract, not a FactorX login.
 
@@ -90,6 +88,8 @@ Rules:
 
 ## Architecture
 
+![FactorX architecture](frontend/public/architecture.png)
+
 ```text
 Browser (Next.js) ── GET /api/attestcoin/proof ── Proof Builder + origin RPC
         │
@@ -107,10 +107,10 @@ Local: Foundry tests, `npm run dev`.
 | Contract | Address |
 |----------|---------|
 | ReceivableRegistry | [`0x1e578b5a…8b7F7`](https://creditcoin-testnet.blockscout.com/address/0x1e578b5aE11BEE48361b70470E8FfD939148b7F7) |
-| AttestcoinVerifier | [`0x18CD4A14…23e03AD1`](https://creditcoin-testnet.blockscout.com/address/0x18CD4A1444933E3FCE147fB2e953ECae23e03AD1) |
+| AttestcoinVerifier | [`0x75304e98…C3101`](https://creditcoin-testnet.blockscout.com/address/0x75304e98D8E37A91E3DC2d7c5bf1b363FebC3101) |
 | CommercialScore | [`0xe90195df…EEbdE02`](https://creditcoin-testnet.blockscout.com/address/0xe90195df4183865CF1533F5B90f15AC37EEbdE02) |
 | FactorCredit | [`0x96e99678…3afEAf`](https://creditcoin-testnet.blockscout.com/address/0x96e99678067c62c441152E69975438768e3afEAf) |
-| PassportNFT | [`0xEB1D16bA…4376Ea`](https://creditcoin-testnet.blockscout.com/address/0xEB1D16bA39D752B5eCABB8D13dA8C8AA364376Ea) |
+| PassportNFT | [`0x1E3E565b…D3f5`](https://creditcoin-testnet.blockscout.com/address/0x1E3E565b13013D430446185BaEcfc8d97fD0D3f5) |
 | CommercialIntent | [`0xB37b771B…75796aa`](https://creditcoin-testnet.blockscout.com/address/0xB37b771B1337cF555dFAeF8bd7190445D75796aa) |
 | MockConsumer | [`0x2A845d32…22AEc`](https://creditcoin-testnet.blockscout.com/address/0x2A845d32837CB3549f3e14cE160586961c522AEc) |
 
@@ -134,19 +134,6 @@ Receivables, score, passport, and outstanding live on Creditcoin and are readabl
 
 **Invoice confidence is a flag.** `1` = payment only, `2` = invoice string present. Not amount-matched factoring.
 
-## **How a Lender Integrates**
-
-The lender **does not need a FactorX account**.
-
-FactorX plugs directly into existing underwriting infrastructure:
-
-```solidity
-passport.hasPassport(sme)
-score.getCommercialScore(sme)
-credit.outstanding(sme)
-credit.getAvailableCredit(sme)
-consumer.checkAndOfferTerms(sme)
-```
 ## Honesty: what is real
 
 | Piece | Status |
@@ -156,6 +143,10 @@ consumer.checkAndOfferTerms(sme)
 | Attestcoin height wait + Proof Builder + `verifySingle` | Real on this testnet |
 | `verifyAndRecord`, score, soulbound mint, replay / self-pay | Real |
 | MockConsumer `BetterTermsOffered` | Real |
+| Same-transaction BlockProver `verifyAndEmit` in Solidity | Not shipped — selector mismatch |
+| Token / stablecoin disbursement | Not shipped |
+| USD amounts | Not shipped — values are 18-decimal source units |
+| Invoice-amount matching / KYC | Not shipped |
 | Attestcoin writability | Out of scope |
 | Mainnet | Not shipped |
 | Multi-member team | Solo |
