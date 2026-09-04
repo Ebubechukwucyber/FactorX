@@ -185,7 +185,7 @@ export async function connectWallet(opts?: { pickAccount?: boolean }): Promise<{
   if (!ethereum) {
     throw new Error("NO_PROVIDER");
   }
-  const address = await requestAccounts(ethereum, opts?.pickAccount === true);
+  const address = await requestAccounts(ethereum, opts?.pickAccount !== false);
   await ensureChain(ethereum);
   writeSession(address);
   return { address, walletClient: clientFor(ethereum, address) };
@@ -220,6 +220,16 @@ export async function resumeWallet(): Promise<{
 
 export function disconnectWallet() {
   clearSession();
+  const ethereum = getEthereum();
+  if (!ethereum) return;
+  void ethereum
+    .request({
+      method: "wallet_revokePermissions",
+      params: [{ eth_accounts: {} }],
+    })
+    .catch(() => {
+      /* wallet may not implement revoke — next Connect still prompts via requestPermissions */
+    });
 }
 
 export async function connectDemo(): Promise<{
