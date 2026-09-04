@@ -4,7 +4,15 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { formatEther, type Address } from "viem";
 import SiteNav from "@/components/SiteNav";
-import { publicClient, connectWallet, errMsg } from "@/lib/chain";
+import {
+  publicClient,
+  connectWallet,
+  resumeWallet,
+  disconnectWallet,
+  getEthereum,
+  walletDeepLink,
+  errMsg,
+} from "@/lib/chain";
 import { ADDRESSES, registryAbi } from "@/lib/contracts";
 
 type Row = {
@@ -26,7 +34,26 @@ export default function ExplorerPage() {
   const [open, setOpen] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!address) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const resumed = await resumeWallet();
+        if (cancelled || !resumed) return;
+        setAddress(resumed.address);
+      } catch {
+        /* stay disconnected */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!address) {
+      setRows([]);
+      return;
+    }
     (async () => {
       try {
         const data = (await publicClient.readContract({
@@ -36,6 +63,7 @@ export default function ExplorerPage() {
           args: [address],
         })) as Row[];
         setRows([...(data || [])].reverse());
+        setStatus("");
       } catch (e) {
         setStatus(errMsg(e));
       }
@@ -50,7 +78,12 @@ export default function ExplorerPage() {
           address ? (
             <button
               type="button"
-              onClick={() => setAddress(null)}
+              title="Disconnect — tap then Connect to use another wallet"
+              onClick={() => {
+                disconnectWallet();
+                setAddress(null);
+                setRows([]);
+              }}
               className="rounded-full border border-border bg-card px-3 py-1.5 font-mono text-[11px] text-muted"
             >
               {address.slice(0, 6)}…{address.slice(-4)}
@@ -60,7 +93,11 @@ export default function ExplorerPage() {
               type="button"
               onClick={async () => {
                 try {
-                  const { address: a } = await connectWallet();
+                  if (!getEthereum()) {
+                    window.location.href = walletDeepLink("/explorer");
+                    return;
+                  }
+                  const { address: a } = await connectWallet({ pickAccount: false });
                   setAddress(a);
                 } catch (e) {
                   setStatus(errMsg(e));

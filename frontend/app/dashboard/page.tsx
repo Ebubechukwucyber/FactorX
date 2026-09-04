@@ -17,7 +17,16 @@ import CreditCard from "@/components/CreditCard";
 import ActivityList from "@/components/ActivityList";
 import SubmitProof from "@/components/SubmitProof";
 import StatsRow from "@/components/StatsRow";
-import { publicClient, connectWallet, connectDemo, errMsg } from "@/lib/chain";
+import {
+  publicClient,
+  connectWallet,
+  connectDemo,
+  resumeWallet,
+  disconnectWallet,
+  getEthereum,
+  walletDeepLink,
+  errMsg,
+} from "@/lib/chain";
 import {
   ADDRESSES,
   scoreAbi,
@@ -127,7 +136,8 @@ export default function DashboardPage() {
           }),
         ]);
         setHasPassport(Boolean(owned));
-        setPassportId(Number(token) || null);
+        const id = Number(token);
+        setPassportId(Number.isFinite(id) && id > 0 ? id : null);
       } catch {
         setHasPassport(false);
         setPassportId(null);
@@ -190,16 +200,59 @@ export default function DashboardPage() {
     return () => clearInterval(t);
   }, [refresh]);
 
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const resumed = await resumeWallet();
+        if (cancelled || !resumed) return;
+        setAddress(resumed.address);
+        if (resumed.walletClient) setWalletClient(resumed.walletClient);
+      } catch {
+        /* stay disconnected */
+      }
+    })();
+    const eth = getEthereum();
+    const onAccounts = (...args: unknown[]) => {
+      const accs = args[0] as string[] | undefined;
+      if (!accs?.length) {
+        disconnectWallet();
+        setAddress(null);
+        setWalletClient(null);
+        return;
+      }
+      void resumeWallet().then((r) => {
+        if (!r) return;
+        setAddress(r.address);
+        if (r.walletClient) setWalletClient(r.walletClient);
+      });
+    };
+    eth?.on?.("accountsChanged", onAccounts);
+    return () => {
+      cancelled = true;
+      eth?.removeListener?.("accountsChanged", onAccounts);
+    };
+  }, []);
+
   async function onConnect() {
     setStatus("Opening wallet…");
+    if (!getEthereum()) {
+      window.location.href = walletDeepLink("/dashboard");
+      return;
+    }
     try {
-      const { address: addr, walletClient: wc } = await connectWallet();
+      const { address: addr, walletClient: wc } = await connectWallet({
+        pickAccount: false,
+      });
       setAddress(addr);
       setWalletClient(wc);
       setStatus(`Connected: ${addr.slice(0, 6)}…${addr.slice(-4)}`);
     } catch (e: unknown) {
       console.error("[FactorX] connect error", e);
-      setStatus(errMsg(e));
+      const msg = e instanceof Error && e.message === "NO_PROVIDER"
+        ? "No injected wallet. Open this page inside MetaMask / Zerion."
+        : errMsg(e);
+      setStatus(msg);
     }
   }
 
@@ -217,8 +270,12 @@ export default function DashboardPage() {
   }
 
   function onDisconnect() {
+    disconnectWallet();
     setAddress(null);
     setWalletClient(null);
+    setHasPassport(false);
+    setPassportId(null);
+    setActivities([]);
     setStatus("");
   }
 
@@ -232,7 +289,7 @@ export default function DashboardPage() {
       return;
     }
     setLoading(true);
-    setStatus("Fetching Attestcoin proof (wait if the source block is not attested yet)…");
+    setStatus("Wait for Attestcoin height…");
     try {
       const hash = txHash as `0x${string}`;
       const proofRes = await fetch(`/api/attestcoin/proof?tx=${hash}`);
@@ -274,6 +331,7 @@ export default function DashboardPage() {
         return;
       }
 
+      setStatus("Sign verifyAndRecord in wallet…");
       const hashTx = await walletClient.writeContract({
         address: ADDRESSES.verifier,
         abi: verifierAbi,
@@ -415,6 +473,7 @@ export default function DashboardPage() {
           isConnected ? (
             <button
               type="button"
+              title="Disconnect — tap then Connect to use another wallet"
               onClick={onDisconnect}
               className="flex max-w-[44vw] items-center gap-2 truncate rounded-full border border-border bg-card px-3 py-1.5 text-[11px] sm:max-w-none"
             >
